@@ -1,3 +1,52 @@
+# Level 1: Top-level files
 *.pdf
-*.csv
-*.dta
+
+# Level 2: Folder with one level of subdirectories
+data/*/*.csv
+data/*/*.csv.gz
+data/*/*.dta
+data/*/*.xlsx
+data/*/*.sbn
+data/*/*.shp
+data/*/*.sbx
+data/*/*.dbf
+data/*/*.prj
+data/*/*.cpg
+data/*/*.qpj
+data/*/*.shx
+
+# Level 3: Folder with two levels of subdirectories
+data/*/*/*.csv
+data/*/*/*.csv.gz
+data/*/*/*.dta
+data/*/*/*.xlsx
+data/*/*/*.sbn
+data/*/*/*.shp
+data/*/*/*.sbx
+data/*/*/*.dbf
+data/*/*/*.prj
+data/*/*/*.cpg
+data/*/*/*.qpj
+data/*/*/*.shx
+data/*/*/*.docx
+
+# Level 4: Folder with three levels of subdirectories
+data/*/*/*/*.csv
+data/*/*/*dta
+data/*/*/*/*.xlsx
+data/*/*/*/*.docx
+
+# Level 5: Folder with four levels of subdirectories
+data/*/*/*/*/*.csv
+data/*/*/*/*dta
+
+# Other Specific Paths
+julia/*/*/*.csv
+julia/*/*/*.dta
+julia/*/*/*.xlsx
+julia/*/*/*.rds
+julia/*/*/*.rdata
+output/*/*.csv
+
+data/*/*/*.gpkg
+

@@ -1,0 +1,1307 @@
+\documentclass[11pt]{article}
+
+%Packages
+\usepackage{amssymb,amsmath,amsfonts,mathabx}
+\usepackage{geometry,setspace}
+\usepackage{graphicx,color}
+\usepackage{lscape,pdflscape,rotating,subfigure,array,float}
+\usepackage{footmisc,caption,comment,dcolumn}
+\usepackage[table,xcdraw,svgnames]{xcolor}
+\usepackage{titlesec}
+\usepackage[colorlinks]{hyperref}
+\usepackage[title]{appendix}
+\usepackage[en-US]{datetime2}
+\usepackage[longnamesfirst]{natbib}
+\usepackage{booktabs}
+\usepackage[skip=4pt, indent=15pt]{parskip}
+\usepackage{centernot}
+\usepackage{xr}
+\usepackage{tikz, tikz-cd}
+\usepackage{threeparttable}
+
+%Fonts
+\usepackage{bbm, ulem, eurosym}
+\usepackage{palatino}
+\usepackage{mathpazo}
+\usepackage[font=normal]{caption}
+\usepackage{enumitem}
+\normalem
+
+%Colors
+\definecolor{cb_blue}{RGB}{0,114,178}
+\definecolor{cb_red}{RGB}{213,94,0}
+\definecolor{cb_yellow}{RGB}{240,228,66}
+\definecolor{cb_green}{RGB}{0,158,115}
+\definecolor{uch_red}{RGB}{102,0,0}
+\AtBeginDocument{\hypersetup{citecolor=uch_red, linkcolor=uch_red, urlcolor=uch_red}}
+    
+%Spacing
+\geometry{left=0.99in,right=0.99in,top=1.0in,bottom=1.0in}
+
+%External documents
+%\externaldocument[]{online_appendix}
+
+%New commands
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\Prob}{\mathbb{P}}
+\newcommand{\spaceand}{\hspace{5mm}\text{and}\hspace{5mm}}
+\def\sym#1{\ifmmode^{#1}\else\(^{#1}\)\fi}
+\newcommand{\Paragraph}{\vspace{0.1cm}\noindent\textbf}
+
+\makeatletter
+\let\conditionalinput\@input
+\makeatother
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{document}
+
+
+
+\begin{titlepage}
+
+\onehalfspacing
+
+\title{
+Location Sorting and Endogenous Amenities:\\ Evidence from Amsterdam\thanks{\scriptsize First version: November 2019. We thank Guillaume Fr\'echette, Alessandro Lizzeri, Elena Manresa, Tobias Salz, Paul Scott, and Sharon Traiberman for their support at the early stages of this project. For useful feedback, we thank Juan Camilo Castillo, Don Davis, Fabian Eckert, Cecile Gaubert, Jessie Handbury, Allan Hsiao, Anders Humlum, Erik Hurst, Panle Jia-Barwick, Chad Syverson, and L\'aszlo T\'et\'enyi. Marek Bojko, Elias van Emmerick, Sara Gerstner and Sriram Tolety provided outstanding research assistance. We acknowledge financial support from the C.V. Starr Center for Applied Economics, the Liew Family Junior Faculty fellowship, and the George G. Rinder Faculty Fellowship. Any errors or omissions are our own.}
+}
+
+
+\author{Milena Almagro\thanks{\scriptsize University of Chicago Booth School of Business and NBER. E-mail: \href{mailto:milena.almagro@chicagobooth.edu}{milena.almagro@chicagobooth.edu}} \and 
+Tom\'as Dom\'inguez-Iino\thanks{\scriptsize  University of Chicago Booth School of Business. E-mail: \href{mailto:tomasdi@uchicago.edu}{tomasdi@uchicago.edu}.}}
+
+\date{
+\normalsize{
+March 2024 \\
+\href{https://m-almagro.github.io/Location_Sorting.pdf}{Click here for latest version.}}
+}
+
+\maketitle
+
+\begin{abstract}
+This paper shows the endogeneity of amenities plays a crucial role in determining the welfare distribution of a city's residents. We quantify this mechanism by building a dynamic model of residential choice with heterogeneous households, where consumption amenities are the equilibrium outcome of a market for non-tradables. We estimate our model using Dutch microdata and leveraging variation in Amsterdam's spatial distribution of tourists as a demand shifter, finding significant heterogeneity in residents' preferences over amenities and in the supply responses of amenities to changes in demand composition. This two-way heterogeneity dictates the degree of horizontal differentiation across neighborhoods, residential sorting, and inequality. Finally, we show the distributional effects of mass tourism depend on this heterogeneity: following rent increases due to growing tourist demand for housing, younger residents---whose amenity preferences are closest to tourists---are compensated by amenities tilting in their favor, while the losses of older residents are amplified.
+\end{abstract}
+
+
+\setcounter{page}{0}
+\thispagestyle{empty}
+\end{titlepage}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newpage
+\onehalfspacing
+
+\section{Introduction}\label{sec: introduction}
+
+
+%%%%%% Big picture and research agenda
+Socioeconomic inequality is tightly linked to residential choice, both across and within cities \citep{moretti2013real}. Higher socioeconomic status households can afford to live in locations with more desirable amenities. Furthermore, amenities improve as residential composition changes, reinforcing the desirability of locations. This response of a location's amenities to demographic sorting has been shown to be a quantitatively important mechanism for amplifying welfare inequality \citep{guerrieri2013endogenous, diamond16}. However, relatively little is understood about the nature of these \emph{endogenous amenities}, as they are typically modeled as a one-dimensional object summarizing a wide variety of a location's characteristics.
+
+%%%%%% Highlight research gap---preference heterogeneity in endogenous consumption amenities---and research question
+It is natural to think different types of households have diverse tastes for different types of consumption amenities, and that firms providing such amenities cater to this heterogeneity \citep{george2003affects}. For example, when neighborhoods gentrify, the initial increase in the share of young, college-educated households is typically accompanied by an increase in the presence of bars and restaurants, and a reduction in mom-and-pop stores. While providing tractability, aggregating amenities into a single index does not allow for the \emph{horizontal} differentiation of neighborhoods on the demand side, nor for differential supply-side responses to consumer heterogeneity. Moreover, if this heterogeneity plays an important distributive role, understanding its sources is crucial to design policies that alleviate urban inequality. For example, incumbent low-income residents living in gentrifying neighborhoods may not only suffer from higher housing prices, but also from the changes in neighborhood characteristics associated with the increase in higher-income households. Therefore, in this paper, we ask: How does preference heterogeneity over multiple endogenous consumption amenities shape within-city residential sorting and inequality?
+
+%%%%%% Methods to answer the research question
+To answer our research question, we build and estimate a dynamic spatial equilibrium model of a city with heterogeneity in household preferences over a \textit{bundle of endogenous amenities}, whose supply caters to each neighborhood's demographic composition. To estimate our model, we use restricted-access microdata from the Centraal Bureau voor de Statistiek (CBS), the statistics bureau of the Netherlands. From these data, we construct an annual panel of residential location choices for the universe of residents in the Netherlands. We complement these data with an annual panel of establishment counts, allowing us to track consumption amenities across time and space. Apart from the availability of high-quality data, Amsterdam provides an ideal laboratory to study the link between residential composition and endogenous amenities, as it has undergone significant changes due to the impact of mass tourism on local housing and amenity markets.
+
+%%%%%% Amsterdam context and why it is ideal for our research question
+We start by showing the expansion of tourism across Amsterdam is significant enough to affect housing and local amenity markets. The number of overnight tourist stays went from 8 million in 2008 to nearly 16 million in 2017, along with a stark increase in housing units converted to short-term rentals (STR), primarily through the Airbnb platform. In contrast to hotels, which tend to spatially cluster in the city center, STR growth sprawled across all neighborhoods, reaching over 5\% of the city-wide rental market and exceeding 20\% in some central neighborhoods. Next, we show STR expansion is sizable enough to impact rent prices. We continue by showing amenities catering to tourists increase in nearly every neighborhood, and their presence is negatively correlated with amenities catering exclusively to locals, such as nurseries/daycare facilities, which decline in more than half of neighborhoods at a median rate of -32\%. Finally, we show different demographic groups respond differently to these neighborhood changes through their residential choices, suggesting different valuations for the changes in amenities.
+
+
+%%%%%%  Model ingredients - demand of locals (preference heterogeneity and dynamics) and tourists
+In our model, residential choices and amenities are jointly determined equilibrium outcomes.  We model the residential choices of local residents with a dynamic discrete choice setup---they are forward-looking, change locations subject to heterogeneous moving costs, and hold heterogeneous preferences over location attributes. We also specify a static model of how tourists choose the location where they book their STR. Hence, a location's total demand for housing and amenities is shaped by the location choices of both locals and tourists.
+
+%%%%%% Model ingredients - supply (STR housing market and multidimensional amenities)
+On the housing supply side, we assume atomistic absentee landlords supply housing to locals on traditional, long-term leases or to tourists on short-term leases. On the amenity supply side, monopolistically competitive firms provide a variety of consumption amenities that differentially cater to different types of locals and tourists. Compared to settings where amenities are collapsed to a one-dimensional quality index, introducing multiple types of amenities allows neighborhoods to endogenously become horizontally differentiated, because residents can trade off one type of amenity for another. This implies households of different income levels may disagree on which neighborhoods are most desirable, therefore decoupling income inequality from welfare (i..e, amenity-adjusted) inequality.
+
+%%%%%% Main results - estimation (reason for dynamics)
+Because our micro-data tracks the residential locations of households, we can accommodate forward-looking behaviour and state-dependent moving costs in our estimation of locals' residential choices. These dynamic elements of our model are motivated by two features of our data. First, moving decisions are infrequent, suggesting significant moving costs. Second, we observe the probability of moving is state-dependent: it decreases in the time a household has been living in its current location. We capture these features of the data by i) including standard distance-adjusted moving costs, and ii) allowing agents to accumulate location capital that is lost upon moving, which introduces a dynamic, state-dependent component to moving costs. Failure to account for these dynamic elements is known to lead to biased estimates \citep{bayer2016dynamic, traiberman2019occupations}.
+
+%%%%%% Main results - estimation (preference parameters)
+We estimate our dynamic location choice model by building upon the Euler Equation in Conditional Choice Probability (ECCP) methodology \citep{aguirregabiria2013euler, scott2013dynamic, kalouptsidi2021linear}. We use an instrumental variable approach to address the endogeneity of rental prices and consumption amenities. Our demand estimates reveal preference parameters that correlate with demographics in reasonable ways. For example, households without children value restaurants the most, consistent with having the most leisure time among all groups. By contrast, households with children value nurseries the most. The highest income and most educated households dislike touristic amenities.
+
+On the amenity supply side, we also estimate reasonable supply responses of different amenity categories to different demographics. We find the presence of tourists mainly drives the entry of touristic amenities, restaurants, and non-food retail, but does not affect the entry of nurseries. Instead, the supply of nurseries responds most strongly to households with children, while younger households incentivize the entry of restaurants. The supply of grocery stores is the most homogeneous across household types, consistent with the notion they provide a service that is demanded similarly across socioeconomic strata. 
+
+
+%%%%%% Main results - counterfactuals
+We use our estimated model to run counterfactuals highlighting how preference heterogeneity and the endogeneity of amenities interact to determine sorting and inequality. In our first counterfactual, we compare the equilibrium outcome of our baseline specification with heterogeneous preferences to one with homogeneous preferences. We show that heterogeneous preferences lead to more spatial sorting, as households have more neighborhood dimensions along which to sort. However, although heterogeneous preferences and endogenous amenities can reinforce each other to generate more sorting, they can also reduce welfare inequality across household types. Intuitively, if preferences over amenities are misaligned between two demographic groups, then they sort into different locations. This sorting increases the supply of their most preferred amenities, making neighborhoods more differentiated, such that the two groups avoid competing for housing in the same location. Thus, there are two mechanisms reducing the welfare gap across groups when preferences are heterogeneous and amenities are endogenous: tailored amenities and lower rental prices. Our findings complement the existing literature on spatial sorting and inequality by introducing two-way heterogeneity in the relationship between households and amenities.
+
+In our second counterfactual, we evaluate the effect of STR entry on local residents' welfare. We disentangle these effects into i) the direct effects on rent via the reduction in housing supply, and ii) the indirect effects on amenities via the endogenous response of amenity supply to the increased tourist population. The key insight behind our results is that while all residents lose from higher rents, their losses may be compensated or amplified depending on how they value the changes in amenities the tourists bring along. Moreover, we show the correlation between income and preferences for the amenities tourists bring determines how regressive STR entry is. If the lowest-income (highest-income) groups dislike the amenities that tourists bring, then STR entry is more regressive (progressive). Finally, in our third counterfactual we compare different forms of regulating mass tourism: through housing markets or amenity markets. Specifically, we compare a tax on short-term rentals to a tax on touristic amenities and show how the distributional impact of each policy lever depends on heterogeneity on both demand and supply sides of the amenities market.
+
+
+\Paragraph{Related literature.} Spatial equilibrium models date back to \cite{rosen1979wage} and \cite{roback1982wages} and are a benchmark to study spatial inequality across and within cities \citep{moretti2013real, diamond16, couture2020urban}. A subset of the literature focuses on the within-city margin, but typically remains silent on the exact mechanisms through which specific amenities are provided \citep{bayer2007unified, guerrieri2013endogenous, ahlfeldt2015economics, davis2019long, su2022rising}. Recent studies impose structure on amenity provision, but often lack heterogeneity in residents' preferences over amenities or collapse amenities into a single quality index \citep{couture2021income, hoelzlein2020two, miyauchi2021consumption}. We contribute by allowing for preference heterogeneity over multiple and differentiated amenities, whose supply is microfounded through a market mechanism. We build upon the notion of ``preference externalities'': demand-side preference heterogeneity can translate into differences in the variety of products supplied \citep{george2003affects, handbury2021poor}. Similarly, we interpret neighborhoods as differentiated products where amenities play the role of endogenous product attributes, and highlight the implications for residential sorting and inequality.
+
+Our paper also contributes to the literature on the STR industry, as well as tourism more broadly. There is extensive work on the effects of STR entry on the housing market \citep{sheppard2016airbnb, koster2021short, garcia2019short, barron2021effect} and hotel revenue \citep{zervas2017rise}. \cite{farronato2018welfare} study the effect of STR entry on competing hotel sector. \cite{calder2021distributional} studies the distributional effects on the New York City rental market, focusing on rent effects but abstracting from amenity effects. \cite{faber2019tourism} show the importance of tourism in the economic development of the Mexican coastline. Finally, \cite{allen2021tourism} study the effects of seasonal tourism on prices of goods and amenities borne by residents of Barcelona. We complement their work by simultaneously studying the effects of tourism on both residential and amenity markets, showing how they interact to shape urban inequality.
+
+In terms of methods, we use discrete-choice tools from the empirical industrial organization literature and show how they can be applied to urban residential markets \citep{mcfadden1974measurement, berry1994estimating, berry1995automobile, rust1987optimal}. Specifically, our dynamic estimation uses the Euler Equation in Conditional Choice Probabilities (ECCP) estimator \citep{hotz1993conditional, arcidiacono2011conditional, aguirregabiria2013euler, scott2013dynamic, kalouptsidi2021linear}. The method has been applied to several contexts where dynamics are first order: agricultural markets \citep{scott2013dynamic, hsiao2021coordination}, occupational choice \citep{traiberman2019occupations, humlum2021robot}, and residential choice \citep{diamond2019effects, davis2019long, davis2021neighborhood}.
+
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Data}\label{sec: data}
+
+
+\Paragraph{Individual-level data: residential histories and socioeconomic characteristics.} Our individual-level microdata is from the statistical bureau of the Netherlands, Centraal Bureau voor de Statistiek (CBS). The key dataset for our dynamic model is the residential cadaster, from which we construct a panel of residential history for the universe of individuals in the Netherlands. We also observe household-level demographics from tax return data: income, educational attainment, employment status, household composition, and ethnic background. We classify households as low-, medium-, or high-skill using educational attainment bins. Because we do not observe workplace nor occupations, our analysis focuses on residential market, rather than labor market outcomes. Further details are in Appendix \ref{sec: appendix data demographics}.
+
+\Paragraph{Housing unit data: tax valuations, tenancy status, physical characteristics, rental prices, and transaction values.} First, we obtain property values from a CBS tax appraisal panel for the universe of residential housing units for 2006-2020, which also includes geo-coordinates, quality measures, and the occupant's tenancy status (owner-occupied, rental, social housing). For the subset of these properties that are transacted, we can confirm that their tax appraisals are highly correlated with transaction prices (we observe all housing sale transactions in the Netherlands). Second, we obtain rental prices from a CBS national rent survey for 2006-2019. Since the survey does not cover the universe of tenants, we impute rental prices by linking it to the universe of tax appraisal valuations and employing a random forest, which outperforms traditional linear hedonic models \citep{mullainathan2017machine}. Imputation details are in Appendix \ref{sec:rent_imputation}. 
+
+\Paragraph{Neighborhood-level data: amenities, demographic changes, tourist inflows.} We use two levels of geographic units based on Amsterdam's administrative divisions: 99 ``wijk" (neighborhoods) that belong to 25 larger ``gebied'' (districts). An average wijk had roughly 8,540 inhabitants as of 2018. After dropping unpopulated or industrial-use-only neighborhoods, we end up with 95 neighborhoods and 22 districts. We observe annual neighborhood-level outcomes from  Amsterdam City Data (ACD) from 2008-2018. These outcomes include demographics (e.g., ethnic, income, and skill composition) and a rich set of consumption amenities.  We also obtain city-level tourist inflows from ACD.  The ACD wijk-level and Tourism data are publicly available at \href{https://onderzoek.amsterdam.nl/dataset/basisbestand-gebieden-amsterdam-bbga}{ACD BBGA} and \href{https://data.amsterdam.nl/dossiers/dossier/toerisme/fdcc54a1-5aa7-4ddf-af16-1c28a99b8c5f/?term=toerisme}{ACD Tourism}.
+
+For our estimation procedure and counterfactuals, we narrow down the set of amenities to six: restaurants, bars, food stores, non-food stores, nurseries, and ``touristic amenities". First, we chose these categories because they are available at a granular spatial unit for the whole time period in our sample (many categories are not reported every year nor at every administrative subdivision). Second, these categories likely vary in the extent to which they cater to tourists versus different types of locals. ``Touristic amenities" is a category defined by ACD that includes tourist-oriented business such as travel agencies, cultural/recreational establishments, and lodging. We remove lodging from the original ACD definition because we treat hotels separately in our analysis---we consider them solely as accommodation for tourists rather than as a consumption amenity that could potentially be valued by both tourists and locals. Thus, our final measure of touristic amenities consists of consumption services that some locals may value, such as cultural/recreational establishments. Bars includes pub-style establishments that serve only alcohol, as well as cafe-style establishments that serve both coffee and alcoholic drinks, without being full-fledged restaurants. Food stores refers to establishments that sell food without service, such as a grocery or convenience store. Non-food stores refers to non-food commercial retail, such as clothing stores. Restaurants and nurseries are self-explanatory.
+
+\Paragraph{Short-term rental listings.} Airbnb holds over 80\% of the STR market share in Amsterdam. Hence, throughout the paper we use Airbnb and STR interchangeably. Our Airbnb data is from \href{http://insideairbnb.com/}{Inside Airbnb}, an independent website providing monthly web-scraped listings data for many cities. Our data consist of listing-level observations with information such as geo-coordinates, prices per night, calendar availability, and reviews. We use this information to separately identify ``active" from ``dormant" STR listings, and to flag commercially-operated listings---those likely to be permanently rented to tourists, thus reducing housing supply for locals. We define commercial listings as entire-home listings with booking activity above a threshold. Classification details are in Appendix \ref{sec: appendix data - airbnb}.
+
+\Paragraph{Final sample: time period and geographic unit of analysis.} We construct an annual panel of location choices and characteristics for 2008-2018. For our dynamic model of local's residential choices, we aggregate 95 neighborhoods (wijk) into 22 districts (gebied). Using larger geographical units allows us to estimate more precise \textit{conditional choice probabilities} that feed into the estimation of the dynamic model. Because demand is at the district level, we also use districts in the estimation of amenity supply. Our estimation of housing supply and tourist demand only requires \textit{unconditional choice probabilities}. Thus, for those cases we use the smaller neighborhoods as spatial units, allowing us to obtain more precise estimates.
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Stylized facts}\label{sec: stylized facts}
+
+We present the stylized facts of our empirical setting and how they motivate our model's key features. We show tourism volume and STR penetration have grown over time and across neighborhoods, and how such growth correlates with our outcomes of interest: rental prices, consumption amenities, and the socioeconomic composition of residents. The role these tourism-induced compositional changes have in shaping local amenities, and how local residents respond to such amenity changes by moving, is what motivates our overarching question of how endogenous amenities interact with sorting across neighborhoods.
+
+\Paragraph{Fact 1: Tourists and STR listings have grown dramatically and sprawled across Amsterdam.} Amsterdam has one of the highest tourist-to-local ratios in the world, above Florence and slightly below Venice (source: \href{https://www.official-esta.com/information/reports/cities-with-most-tourists}{ESTA}). Figure \ref{fig:tourism and airbnb} shows that, between 2008-2017, the number of overnight stays per resident doubled, hotel capacity grew from approximately 22,000 to to 31,000 rooms, while STR listings grew from zero to over 25,000. The figure also shows the evolution of commercially-operated listings, which are available year-round and therefore comparable to hotel rooms in terms of nights-availability. By 2017, there were approximately 7,000 of these listings, which is equivalent to 25\% of the city's stock of hotel rooms.
+
+\begin{figure}[H]
+    \caption{Overnight stays per resident, hotel rooms, and STR listings (2008-2017).}
+     \label{fig:tourism and airbnb}
+    \centering
+    \begin{minipage}{0.5\textwidth}
+        \includegraphics[width=0.95\linewidth]{output/figures/stylized_facts/overnightstays_per_resident.pdf}
+    \end{minipage}%
+    \begin{minipage}{0.5\textwidth}
+        \includegraphics[width=0.95\linewidth]{output/figures/stylized_facts/hotelrooms_and_listings_commercial.pdf}
+    \end{minipage}
+    \caption*{\footnotesize Notes: On the left, ``overnight stays per 100 residents" is constructed as annual overnight stays (in hotels and STR) divided by population, and multiplied by 100---a value of 5 means that on an average night there are 5 tourists per 100 residents. On the right, active and commercial Airbnb listings are constructed from Inside Airbnb data using the procedure described in Appendix \ref{sec: appendix data - airbnb}. Hotel, stay and population data are from \href{https://onderzoek.amsterdam.nl/dossier/toerisme?term=toerisme}{ACD Tourism} and \href{https://data.amsterdam.nl/datasets/rl6-35tFAw2Ljw/basisbestand-gebieden-amsterdam-bbga/}{ACD BBGA}.}
+\end{figure}
+
+\vspace{-0.25cm}
+
+\begin{figure}[H]
+    \caption{STR share of rental stock and hotel beds per resident (2011-2017).}\label{fig:spatial evolution airbnb}
+    \centering
+    \caption*{Panel A: Commercial STR share of rental stock (2011-2017).}
+    \includegraphics[width=0.95\linewidth]{output/figures/stylized_facts/commercial_listings_sh_p_combined.pdf}
+    \caption*{Panel B: Hotel beds per resident (2011-2017).}
+    \includegraphics[width=0.95\linewidth]{output/figures/stylized_facts/hotel_beds_per_capita_combined.pdf} 
+    \caption*{\footnotesize Notes: Maps show neighborhood (``wijk'') level outcomes. We construct commercial STR listings from Inside Airbnb data, using the procedure described in Appendix \ref{sec: appendix data - airbnb}. Rental housing stock, hotel beds, and population data is from \href{https://data.amsterdam.nl/datasets/rl6-35tFAw2Ljw/basisbestand-gebieden-amsterdam-bbga/}{ACD BBGA}. The rental stock corresponds to private market rental stock (i.e., we exclude social housing rentals).}
+\end{figure}
+
+Figure \ref{fig:spatial evolution airbnb} shows commercial listings have sprawled to cover most of the city. By contrast, the spatial distribution of hotels remains mostly unchanged and clustered in the city center. This is partly due to zoning regulations that apply to hotels but not to the STR segment. At the aggregate level, commercially-operated STR listings represented 6\% of the rental market in 2017, exceeding 20\% in some central neighborhoods. These trends suggest the increasing presence of tourists as part of the city's population is significant enough to alter local housing and amenity markets.
+
+
+\Paragraph{Fact 2: Rents have increased more in neighborhoods with more STR entry.} Table \ref{tab: reduced form iv - rent and sale value} shows the intensity of STR penetration is positively correlated with housing market outcomes. OLS regressions in the top panel show a 1\% increase in a neighborhood's commercial STR listings is associated with a rent increase between .06-.11\%. These magnitudes are sizable given rents grew at an annualized rate of 1.02\% between 2009-2019, and are also in line with recent studies estimating the effect of STR on housing market prices. For example, \cite{barron2021effect} estimate an STR elasticity of rent of 0.018. The bottom panel of Table \ref{tab: reduced form iv - rent and sale value} repeats the regression exercise for sale prices, finding a 1\% increase in commercial STR listings is associated with a house sale price increase between .04-.11\% in OLS specifications.
+
+\conditionalinput{output/tables/reducedform_iv_rent_and_salevalue.tex}
+
+The main endogeneity concern from the OLS results is that time-varying neighborhood-level unobservables correlate with both STR penetration and housing market prices, leading to biases that depend on the sign of such correlations. For example, if neighborhoods that are becoming more attractive to tourists are becoming less attractive to locals, then such areas will have more STR and lower rent, leading to downward-biased OLS estimates. Beyond including controls that likely correlate with such unobservables, we address these concerns with a shift-share instrument, a common research design in the literature measuring the impact of STR on housing markets \citep{barron2021effect, garcia2019short}. 
+
+The ``shift'' part of the instrument exploits time variation in worldwide demand for STR, as proxied by online search activity for Airbnb. The ``share'' part constructs neighborhood-level exposure to tourism by using the spatial distribution of historic monuments. Our exclusion restriction requires both factors to be orthogonal to time-varying and neighborhood-level unobservables, conditional on the rest of the covariates. First, Airbnb's worldwide popularity is unlikely to be informative of neighborhood-specific trends. Second, the spatial distribution of monuments determined centuries ago is unlikely to be informative of current trends affecting housing prices. Our results indicate the OLS estimates are downward-biased. This is consistent with the unobservables being positively correlated with Airbnb presence and negatively correlated with housing market prices, i.e., they are likely dis-amenities for local residents. 
+
+Finally, note the reduced-form results from Table \ref{tab: reduced form iv - rent and sale value} capture the total impact of STR. This is a combination of i) less housing supply for locals, which raises rents, and ii) changes in amenities, which can raise or lower rents depending on how locals value such amenities. This limitation of the reduced-form analysis is what motivates our model, with which we aim to disentangle these two channels.
+
+\begin{figure}[H]
+\centering
+\caption{Evolution of consumption amenities (2011-2017 pp changes).}\label{fig:spatial evolution retail}
+\centering
+\includegraphics[width=0.95\linewidth]{output/figures/stylized_facts/growth_amenities_combined.pdf}
+\caption*{\footnotesize Notes: Maps show percentage point changes between 2011-2017 for each amenity sector. Data is from \href{https://data.amsterdam.nl/datasets/rl6-35tFAw2Ljw/basisbestand-gebieden-amsterdam-bbga/}{ACD BBGA}.}
+\end{figure}
+
+\Paragraph{Fact 3: Amenities have tilted towards tourists and away from locals.} Beyond the impact of STR on the housing market, the amenities surrounding the housing units have also changed as tourists become an increasing share of the city's population. 
+
+Figure \ref{fig:spatial evolution retail} shows touristic amenities have grown across nearly all neighborhoods, although at different intensities, while amenities catering exclusively to locals, such as nurseries, have declined in most locations. Figure \ref{fig:spatial correlation amenities} confirms touristic amenities indeed locate in neighborhoods with high tourist intensity, and that their growth is negatively correlated with amenities that are clearly targeted to locals, such as nurseries. Overall, these patterns are consistent with tourists having different preferences over amenities than locals. As for the other 4 amenities displayed in Figure \ref{fig:spatial evolution retail}, they are likely in between the two extremes of touristic amenities and nurseries in the sense they would not a-priori seem to cater solely to locals or solely to tourists, but likely to both. The purpose of our amenity supply model is to estimate the extent to which amenities such as these lie in between the two extremes.
+
+\begin{figure}[H]
+\centering
+\caption{Spatial correlation between tourist-oriented and local-oriented amenities.}\label{fig:spatial correlation amenities}
+\centering
+\includegraphics[width=.4\linewidth]{output/figures/stylized_facts/binscatter_tourists_touristic_amenities.pdf}%
+\includegraphics[width=.4\linewidth]{output/figures/stylized_facts/binscatter_change_p_nurseries_touristic_amenities.pdf}
+\caption*{\footnotesize Notes: Left figure plots the 2011-2017 average tourist intensity vs touristic amenity intensity, for each neighborhood. Right figure plots the 2011-2017 percentage point change for nurseries vs touristic amenities, for each neighborhood. Nurseries decline in 58\% of neighborhoods, with a median decline of -32\%. Data is from \href{https://data.amsterdam.nl/datasets/rl6-35tFAw2Ljw/basisbestand-gebieden-amsterdam-bbga/}{ACD BBGA}.}
+\end{figure}
+
+\Paragraph{Fact 4: The composition of residents has changed heterogeneously across neighborhoods.} Figure \ref{fig:spatial evolution population} shows how socioeconomic composition has evolved in each neighborhood by displaying changes in the population shares of various demographic groups. The top panel shows a falling share of residents with Dutch background in most neighborhoods, except those around the city center. By contrast, the share of non-European immigrants has increased in a few central neighborhoods and mostly in the periphery. In terms of income heterogeneity, the middle panel shows the share of residents in the top 20\% of the national income distribution has grown in central neighborhoods but not in the outskirts, indicating a rise in income inequality between the core and periphery. The bottom panel shows heterogeneity along household composition: households with children have become increasingly outnumbered by those without in most neighborhoods.\footnote{It is worth noting that changes in neighborhood composition can occur because households move, but also because household characteristics can change for those that do not move. For fixed characteristics such as ethnicity we can guarantee all the compositional change is due to moving, but this won't be the case for mutable characteristics such as income or marital status. From the aggregate data with which Figure \ref{fig:spatial evolution population} is constructed, we cannot disentangle how much of the compositional changes along mutable characteristics comes from households moving versus their status changing. However, we can isolate the moving component in the estimation of our structural model by leveraging individual-level data that explicitly tracks residential location over time.} To summarize, the heterogeneity in the socioeconomic make-up of neighborhoods and in their evolution over time motivates the heterogeneity in our model's demand primitives: rent elasticities, moving costs, and valuation of amenities.
+
+\begin{figure}[ht]
+    \caption{Changes in socioeconomic composition of neighborhoods (2011-2017).}\label{fig:spatial evolution population}
+    \caption*{{Panel A: Ethnic composition}}
+    \centering
+    \includegraphics[width=0.65\linewidth]{output/figures/stylized_facts/growth_pop_share_ethnic_combined.pdf}
+    \vspace{0.1cm}
+    \caption*{{Panel B: Income composition}}
+    \centering
+    \includegraphics[width=0.65\linewidth]{output/figures/stylized_facts/growth_pop_share_income_combined.pdf}
+    \vspace{0.1cm}
+    \caption*{{Panel C: Household composition}}
+    \centering
+    \includegraphics[width=0.65\linewidth]{output/figures/stylized_facts/growth_pop_share_hhcomposition_combined.pdf}
+    \caption*{\footnotesize Notes: Maps shows changes in neighborhood population share of each group. Data is from \href{https://data.amsterdam.nl/datasets/rl6-35tFAw2Ljw/basisbestand-gebieden-amsterdam-bbga/}{ACD BBGA}.}
+\end{figure}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{A dynamic model of an urban rental market}\label{sec: model}
+Motivated by the previous facts, we build a dynamic model of a city's rental market that consists of i) heterogeneous households and tourists making location decisions, ii) landlords who can rent their units to locals or tourists, and iii) a market for amenities that microfounds how the composition of amenities endogenously responds to the composition of locals and tourists.
+
+\Paragraph{Notation.} There are $J+1$ locations: $J$ locations inside the city and an outside option. Households are classified into $K+1$ types: $K$ different types of locals and a tourist type $T$, each differing in their preferences over consumption amenities. We define the population composition of location $j$ at time $t$ as the following vector,
+\begin{align}\label{eq: pop composition definition M_jt}
+    M_{jt} \equiv [M_{jt}^1,\dots, M_{jt}^K, M_{jt}^T]',
+\end{align}
+where $M_{jt}^k$ is the number of type $k$ households in location $j$.
+
+Consumption amenities are classified into $S$ sectors, each consisting of multiple firms providing their own differentiated varieties. For example, if the sector is ``restaurants", a firm is an individual restaurant supplying its own variety. Hence, we use the terms ``firm" and ``variety" interchangeably. Let $N_{sjt}$ denote the number of varieties in sector $s$ and location $j$ at time $t$. We define the amenities of location $j$ as the vector that lists the number of varieties in each sector,
+\begin{align}\label{eq: amenities definition a_jt}
+    a_{jt} \equiv [N_{1jt},\dots, N_{Sjt}]'.
+\end{align}
+
+We present the model in three steps. First, section \ref{sec: endogeneous_amenities} shows how amenities $a_{jt}$ are endogenously determined by the population composition $M_{jt}$. Second, sections \ref{sec: housing_supply}-\ref{sec: housing_demand} show the reverse mapping---how population composition adjusts to amenities through location choices. Third, section \ref{sec: equilibrium} brings the two mappings together by providing an equilibrium definition through which population composition and amenities are jointly determined.
+
+
+\subsection{Endogenous amenities}\label{sec: endogeneous_amenities}
+
+This section shows how amenities are endogenously determined by residential composition. We present main results, relegating derivations to Appendix \ref{sec: appendix microfoundation-amenity demand}. 
+
+\Paragraph{Demand for amenities.} Households have Cobb-Douglas preferences over housing $H$ and a composite of consumption amenities $C$, with $\phi^k$ being the expenditure share on $C$ for a type $k$ household. Let $w^k_t$ denote the type $k$ income at time $t$, so that total expenditures on housing and the amenities composite are $(1-\phi^k) w^k_t$ and $\phi^kw^k_t$, respectively. Next, conditional on picking location $j$, a type $k$ consumer chooses how much of her after-rent income $\phi^kw^k_t$ to allocate across the locally available amenity sectors and varieties . We assume consumers hold \textit{Cobb-Douglas preferences across amenity sectors} and \textit{CES preferences over varieties within a sector}. Hence, the quantity demanded by type $k$ for variety $i$ in sector-location $sj$ at time $t$ is,
+\begin{align}\label{eq: amenities_demand}
+    q_{isjt}^k = \frac{\alpha^k_{s} \phi^kw^k_t}{p_{isjt}} \left(\frac{p_{isjt}}{P_{sjt}}\right)^{1-\sigma_s},\text{ with } P_{sjt} \equiv \left(\sum_{i=1}^{N_{sjt}} p_{isjt}^{1-\sigma_s} \right)^{\frac{1}{1-\sigma_s}},
+\end{align}
+where $\alpha^k_{s}$ is the sector's budget share, $\sigma_s>1$ is the substitution elasticity across varieties within the sector, $p_{isjt}$ is the variety price, $N_{sjt}$ is the number of varieties in sector-location $sj$, and $P_{sjt}$ is the sector-location price index. Total demand for variety $i$ is obtained by scaling up individual demand \ref{eq: amenities_demand} by the location's type $k$ population and aggregating across types,
+\begin{align}\label{eq: amenities_demand_total}
+    q_{isjt} = \sum_k q_{isjt}^k M_{jt}^k.
+\end{align}
+
+\Paragraph{Supply of amenities.} Firms are indexed by $i$ and engage in monopolistic competition with free entry, facing the same marginal cost $c_{sjt}$ within a sector-location $sj$. This implies every firm $i$ in sector-location $sj$ chooses the same price and quantity,\footnote{Our amenity data do not contain the firm-level data required to accommodate within sector-location price differences. Given the data limitations, our assumption on marginal costs allows for an empirically tractable mapping of how amenities respond to demographic composition that still allows for heterogeneity in prices across sector-location-time.}
+\begin{align}\label{eq: amenities_pricing}
+    p_{isjt} = \frac{c_{sjt}}{1-\frac{1}{\sigma_s}} \quad \forall i \in sjt \implies p_{isjt} = p_{sjt} \quad \text{and} \quad q_{isjt} = q_{sjt} \quad \forall i \in sjt.
+\end{align}
+Apart from variable costs, firms also pay a fixed cost per period $F_{sjt}$ which captures operational costs such as the cost of renting commercial space. Under these assumptions, firms enter until the following zero-profit condition holds, 
+\begin{align}\label{eq: amenities_free_entry}
+     (p_{sjt}-c_{sjt})q_{sjt} = F_{sjt}(N_{jt}),\quad \text{ where } N_{jt}=\sum_s N_{sjt}.
+\end{align}
+Note we assume $F_{sjt}$ is increasing in the location's total number of firms across all sectors, $N_{jt}$. This allows for congestion forces, such as competition for commercial real estate among firms operating in the same location. Alternatively, congestion could be sector-specific (a function of $N_{sjt}$). We opt for our baseline assumption given we expect all firms in a location to compete in the same real estate market.
+
+\Paragraph{Equilibrium amenities.} The market clearing conditions for the amenities market are obtained by plugging \ref{eq: amenities_demand_total} and \ref{eq: amenities_pricing} in \ref{eq: amenities_free_entry}. This delivers the equilibrium number of varieties $N_{sjt}$ as a function of population composition $M_{jt}$,
+\begin{align}\label{eq: amenities_N}
+N_{sjt} = \frac{1}{\sigma_s F_{sjt}}\sum_k \alpha_{s}^k \phi^kw^k_t M_{jt}^k.
+\end{align}
+Given our definition for amenities in \ref{eq: amenities definition a_jt}, this section has constructed a mapping, which we denote $\mathcal{A}(\cdot)$, that goes from population composition $M_{jt}$ to amenities $a_{jt}$ by imposing market clearing in the amenities market,
+\begin{align}\label{eq: amenities_mapping}
+    a_{jt} = \mathcal{A}(M_{jt}).
+\end{align}
+\vspace{-1cm}
+\subsection{Housing supply}\label{sec: housing_supply}
+Let $\mathcal{H}_{jt}$ denote the total housing stock, measured in units of floor space, in location $j$ and year $t$. We assume housing stock is inelastic in the short-run and follows an exogenously determined path over time.\footnote{On average, annual growth of housing stock in Amsterdam is 1.2\%, similar to the 0.9\% value for San Francisco, one of the least housing-elastic cities in the US (sources: \href{www.datacommons.org}{datacommons.org}, \href{https://www.census.gov/construction/bps/index.html}{Building Permits Survey}, \cite{saiz2010geographic}). Our assumption of inelastic housing supply is broadly in line with other studies of housing supply in the Netherlands \citep{vermeulen2007housing}.} 
+
+In each location there is a continuum of absentee landlords making a binary choice between renting in the long-term market ($LT$) or in the short-term market ($ST$). The income obtained per unit of floor space from long-term rentals is $r_{jt}$, and from short-term rentals is $p_{jt}$. Given different matching and managerial costs involved in renting short- versus long-term, we introduce a wedge in operating costs $\kappa_{jt}$ between the two choices. An individual landlord's problem is therefore,
+\begin{align*}
+   \max\left\{\alpha r_{jt}+\epsilon_{LT}, \quad  \alpha p_{jt}-\kappa_{jt}+\epsilon_{ST} \right\},
+\end{align*}
+where $\alpha$ is the marginal utility of income and $\epsilon_{LT}$ and $\epsilon_{ST}$ are idiosyncratic shocks. 
+
+\Paragraph{Housing supply in each location.} Under the assumption that the idiosyncratic shocks are distributed type I EV, the amount of housing supplied (in units of floor space) in the long- and short-term markets are, respectively,
+\begin{align}\label{eq: housing supply - LT}
+\mathcal{H}^{LT,S}_{jt}(r_{jt}, p_{jt}) & = \frac{\exp(\alpha r_{jt})}{\exp(\alpha r_{jt})+\exp( \alpha p_{jt}-\kappa_{jt})} \mathcal{H}_{jt}, \\ \label{eq: housing supply - ST}
+\mathcal{H}^{ST,S}_{jt}(r_{jt}, p_{jt}) & = \mathcal{H}_{jt} - \mathcal{H}^{LT,S}_{jt}(r_{jt}, p_{jt}).
+\end{align}
+
+\subsection{Housing demand}\label{sec: housing_demand}
+Demand for housing is composed of the demand from local residents and the demand from tourists staying in short-term rental units.
+\vspace{-0.3cm}
+\subsubsection{Demand from locals}\label{sec:demand_locals}
+
+At the beginning of each period $t$, a household $i$ chooses a residential location $j_{it}$. Locations inside the city are indexed $j=1,\dots,J$, while the outside option of leaving the city is denoted $j=0$. 
+
+\Paragraph{Moving costs and location tenure.} Upon moving, households incur a moving cost that consists of a fixed component and a bilateral distance-adjusted component, 
+\begin{align*}
+   MC^k(j_{it},j_{it-1})=
+   \begin{cases}
+   0 &\hspace{5mm}\text{if }   j_{it} = j_{it-1} \\
+   m_0^k + m_1^k \text{dist($j_{it},j_{it-1}$)} &\hspace{5mm}\text{if }   j_{it} \neq j_{it-1}\text{ and } j_{it},j_{it-1}\neq 0\\
+   m_2^k &\hspace{5mm}\text{if }  j_{it} \neq j_{it-1}\text{, and } j_{it} = 0 \text{ or } j_{it-1} = 0,
+\end{cases}  
+\end{align*} 
+where $\text{dist($j_{it},j_{it-1}$)}$ is distance between current and previous location, and $m_0^k$ and $m_2^k$ are fixed costs of moving within and outside the city, respectively. Moreover, households
+accumulate tenure by staying in a location. Tenure is key to rationalize the decreasing hazard rate of moving in the data, and evolves deterministically as,
+\begin{align*}
+     \tau_{it} =\begin{cases} \min\{\tau_{it-1}+1,\bar{\tau}\} &\hspace{5mm}\text{if } j_{it} = j_{it-1} \\
+    1  &\hspace{5mm}\text{otherwise}.
+    \end{cases}
+\end{align*}
+We assume tenure can be accumulated up to a maximum absorbing state $\bar{\tau}$. Note $MC^k(j_{it},j_{it-1})$ can be interpreted as the static component of the cost of moving, as in static migration models \citep{bryan2019aggregate}, while $\tau_{it}$ is the dynamic component. That is, for a household that remains in the same location over multiple periods the term $MC^k(j_{it},j_{it-1})$ remains constant over time while $\tau_{it}$ evolves.
+
+\Paragraph{Individual state variables.}  We denote $x_{it} \equiv  (j_{it-1}, \tau_{it-1})$ as the vector of individual state variables that are observable to the econometrician: location $j_{it-1}$ and tenure $\tau_{it-1}$. Households also face a vector of unobservable idiosyncratic preference shocks for each location, $\epsilon_{it} = [\epsilon_{i0t}, \epsilon_{i1t}, \dots, \epsilon_{iJt}]$.
+
+\Paragraph{Aggregate state variables.} We denote $\omega_t \equiv (r_t,a_t,b_t,\xi_t)$ as the matrix of aggregate state variables, which consists of the vector of rent $r_t= (r_{1t}, \dots, r_{Jt})$, the matrix of consumption amenities $a_t=[a_{1t}, \dots, a_{Jt}]$, exogenous location attributes  $b_t=[b_{1t}, \dots, b_{Jt}]$, and factors that are unobservable to the econometrician $\xi_t=[\xi_{1t}, \dots, \xi_{Jt}]$. In what follows and to condense notation, we denote with subscript $t$ the functions that depend on $\omega_t$, in particular the flow utility and value function,
+\begin{align*}
+      u^k_t(j, x_{it}) \equiv  u^k(j, x_{it}, \omega_t)  \spaceand  V^k_t(x_{it} , \epsilon_{it}) \equiv  V^k(x_{it}, \epsilon_{it},\omega_t).
+\end{align*}
+\Paragraph{Flow utility and value function.} The flow payoff of a household $i$ of type-$k$ in location $j$ is a function of its individual state $x_{it}$ and the aggregate state at time $t$,
+\begin{align}\label{eq: main_utility_vij}
+ u^k_t(j, x_{it}) = \overline{u}^k_t(j)+ \delta_{\tau}^k \log \tau_{it} - MC^k(j,j_{it-1}),
+\end{align}
+where we define $\overline{u}^k_t(j)$ as the component of payoffs that is common to all type $k$ households. We stress that aggregate state variables such as $r_{jt}, a_{jt}$, and $ b_{jt}$ enter flow payoffs through $\overline{u}^k_t(j)$. Also note the $k$ index in $\overline{u}^k_t(j)$ implies preferences heterogeneity over such variables. We allow for the utility of households to increase with  location capital, motivated by the fact that the likelihood of moving to a new location decreases with location tenure (see Appendix \ref{sec: evidence hazard rate} for evidence). Finally, household $i$'s dynamic problem can be written recursively as,
+\begin{align*}
+    V^k_t(x_{it} , \epsilon_{it})
+    & =\max_{j \in  \{0,1,...,J\}}u^k_t(j, x_{it})+ \epsilon_{ijt} + \beta \E_t\Bigg[ V^k_{t+1}( x_{it+1} , \epsilon_{it+1})| j, x_{it},\epsilon_{it} \Bigg].
+\end{align*}
+
+\Paragraph{Location choice and evolution of the population.} If $\epsilon_{ijt} \overset{i.i.d.}{\sim}$ type I EV, the probability a type $k$ household chooses $j$, conditional on state $x_{it}$, is,
+\begin{align}\label{eq: transition probs}
+\Prob^k_t(j|x_{it}) = \frac{\exp\bigg(u_t^k(j, x_{it}) + \beta \E_t\Bigg[ V^k_{t+1}( x_{it+1} , \epsilon_{it+1})|j, x_{it},\epsilon_{it} \Bigg]\bigg)}{\sum_{j'}\exp\bigg(u_t^k(j', x_{it}) + \beta \E_t\Bigg[ V^k_{t+1}( x_{it+1} , \epsilon_{it+1})|j', x_{it},\epsilon_{it} \Bigg]\bigg)}.
+\end{align}
+To keep track of the population distribution over time, let $\pi_t^k(j,\tau)$ denote type $k$'s joint probability of living in location $j$ with tenure $\tau$ at the end of period $t$. We can write how this object evolves by using the conditional choice probability \ref{eq: transition probs}, 
+\begin{align}\label{eq: evolution pop distribution}
+    \pi_{t}^k(j,\tau) = \begin{cases}
+    \sum_{\tau'} \sum_{j'\neq j} \Prob^k_t(j|j',\tau') \pi_{t-1}^k(j',\tau') & \tau=1\\
+    \Prob^k_t(j|j,\tau-1) \pi_{t-1}^k(j,\tau-1)  & \tau \in [2,\bar{\tau})\\
+    \Prob^k_t(j|j,\bar{\tau}-1)\pi_{t-1}^k(j,\bar{\tau}-1)  + \Prob^k_t(j|j,\bar{\tau}) \pi_{t-1}^k(j,\bar{\tau}) & \tau = \bar{\tau}.
+    \end{cases}
+\end{align}
+Finally, to obtain the type $k$ population count for location $j$ we scale probabilities in \ref{eq: evolution pop distribution} by $M^k_{t}$, the total number of type $k$ locals city-wide, and sum across tenure states, 
+\begin{align}\label{eq: population locals}
+    M^{k}_{jt}(r_t,a_t) = \sum_{\tau} \pi_t^k(j,\tau) M^k_t \quad \forall k \in \{1,\dots,K\}.
+\end{align}
+The left-hand side of the equation above is explicit on location choices depending on the distribution of rent and amenities, given the $\pi_t^k(j,\tau)$ term on the right-hand side depends on the choice probability \ref{eq: transition probs}, which in turn depends on $r_t$ and $a_t$. 
+
+\Paragraph{Housing demand from locals in each location.} Note equation \eqref{eq: population locals} is the demand for location $j$ measured in units of households, not in units of floor space. Hence, we need to define the floor space demanded by each type of household. Recall from section \ref{sec: endogeneous_amenities} that households have Cobb-Douglas preferences over housing and amenity consumption, which implies a type-$k$ household in location $j$ consumes $f_{jt}^k\equiv \frac{(1-\phi^k)w^k_t}{r_{jt}}$ units of floor space. Therefore, long-term rental demand from locals for location $j$, measured in units of floor space, is,
+\begin{align}\label{eq: housing demand - LT}
+    \mathcal{H}^{LT,D}_{jt}(r_t,a_t) = \sum_{k=1}^K M^{k}_{jt}(r_t,a_t) f_{jt}^k.
+\end{align}
+
+\subsubsection{Demand from tourists}\label{sec:demand_tourists}
+
+There is an exogenous number of tourists $M_t^T$ arriving into the city and choosing to stay in a short-term rental or a hotel.
+
+\Paragraph{Tourists in short-term rentals.} Tourists staying in a STR in location $j$ obtain the following payoff (excluding idiosyncratic shocks),
+\begin{align}\label{eq: main_utility_vij_tourists}
+ u_{jt}^{ST} =  \delta_{j}^{ST} + \delta^{ST}_t  + \delta_{p}^{ST} \log p_{{j}t} + \delta_{a}^{ST} \log a_{jt} + \xi_{{j}t}^{ST},
+\end{align}
+where $p_{jt}$ is the location's short-term rental prices, $a_{jt}$ are amenities, and the remaining terms are factors that are unobservable to the econometrician, which we incorporate with fixed effects ($\delta_j^{ST}$, $\delta_t^{ST}$) and a time-varying location quality $\xi^{ST}_{jt}$. The payoff in \ref{eq: main_utility_vij_tourists} is also subject to a type I EV idiosyncratic shock $\varepsilon^{ST}_{jt}$, which gives a closed-form expression of the number of tourists choosing to stay in a STR in $j$, 
+\begin{align}\label{eq: tourist ST demand}
+M^{ST}_{jt}(p_t, a_t) = \frac{\exp \left( u_{jt}^{ST} \right) }{\sum_{j'=0}^J \exp \left( u_{j't}^{ST} \right) }\cdot M^{T}_t.
+\end{align}
+It is through equation \eqref{eq: tourist ST demand} that the spatial distribution of tourists in short-term rentals responds to changes in short-term rental prices $p_t$ and amenities $a_t$.
+
+
+\Paragraph{Tourists in hotels.} Tourists also have the option to stay in a city-wide hotel sector, which we treat as an outside option. While this endogenizes the city-wide number of tourists in hotels, it does not endogenize how they are distributed across locations. We distribute tourists in hotels across locations in proportion to the hotel capacity observed in the data. We take this approach because we do not have hotel price data nor bookings to estimate hotel demand across locations. Although city-wide hotel capacity increases during our sample period, we consider our approach a reasonable solution given the spatial distribution of hotels does not substantially change and most of the spatial expansion of tourist accommodation occurs through short-term rentals (our stylized fact 1 from section \ref{sec: stylized facts}). Operationally, we denote the hotel option as an outside option with its payoff normalized to zero. Hence, the number of tourists who endogenously choose the hotel sector at the aggregate city level is the residual of those choosing short-term rentals,
+\begin{align*}
+    M^H_{t}(p_t, a_t) = M_t^T - \sum_{j=1}^J M^{ST}_{jt}(p_t, a_t).
+\end{align*}
+The tourist population in hotels in location $j$ is constructed as $M^H_{jt}(p_t, a_t)= s_{jt}^{beds} \times M^H_{t}(p_t, a_t)$, where $s_{jt}^{beds}$ is the location $j$ share of the city's hotel beds observed in the data. Finally, we obtain the total number of tourists staying in location $j$ as the sum of those staying in short-term rentals and hotels,
+\begin{align}\label{eq: tourist T demand}
+    M^T_{jt}(p_t, a_t) =  M^{ST}_{jt}(p_t, a_t) +  M^H_{jt}(p_t, a_t).
+\end{align}
+Because the tourist population of a location depends on the vector of prices $p_t$ and amenities matrix $a_t$, the model endogenizes how the spatial distribution of tourists responds to amenities and prices, but through the STR market. As mentioned above, we consider this reasonable given most of the scope for tourists to switch their accommodation location in response to prices and amenities likely occurs through the more flexible and spatially distributed short-term rental market rather than through the more rigid and spatially clustered hotel sector.
+
+
+\Paragraph{Housing demand from tourists in each location.} The impact of tourists on housing demand occurs through STR demand. To express STR demand \ref{eq: tourist ST demand} in units of floor space let $f_{jt}$ denote the average size of a unit in location $j$. Therefore, STR demand from tourists, in units of floor space is,
+\begin{align}\label{eq: tourist ST demand - floor space}
+\mathcal{H}^{ST,D}_{jt}(p_t, a_t) = M^{ST}_{jt}(p_t, a_t) f_{jt}.
+\end{align}
+\subsection{Equilibrium}\label{sec: equilibrium}
+
+This section defines a stationary equilibrium in which population composition, rents, STR prices, and amenities are endogenously and jointly determined. Before doing so, it is necessary to define a stationary distribution of the population. Consider the type $k$ population law of motion in \ref{eq: evolution pop distribution}, but written in matrix form,
+\begin{align}\label{eq: evolution pop distribution - matrix form - r a}
+    \pi_{t}^k = \Pi^k_t (r_{t},a_{t}) \pi_{t-1}^k, 
+\end{align}
+where each entry in the vector $\pi_{t}^k$ is the joint probability of a pair of individual states $(j,\tau)$, while $\Pi^k_t (r_{t},a_{t})$ is a transition matrix whose entries are the conditional choice probabilities from \ref{eq: transition probs} (and thus depends on rent $r_t$ and amenities $a_t$).
+
+
+\Paragraph{Definition (Stationary population distribution).} Given a vector of rental prices $\mathbf{r}=(r_1,\dots,r_J)$ and a matrix of amenities $\mathbf{a}=[a_1,\dots,a_J]$, a \emph{stationary population distribution over locations and tenure} is a vector $\pi^k(\mathbf{r},\mathbf{a})$ for each type $k$ that satisfies,
+\begin{align}\label{eq: stationary distribution definition pi}
+    \pi^k(\mathbf{r},\mathbf{a}) = \Pi^k(\mathbf{r},\mathbf{a})\pi^k(\mathbf{r},\mathbf{a}).
+\end{align}
+Notice \ref{eq: stationary distribution definition pi} is simply the stationary version of the law of motion in \ref{eq: evolution pop distribution - matrix form - r a}: $\Pi^k(\mathbf{r},\mathbf{a})$ is the transition matrix implied by rental prices $\mathbf{r}$ and amenities $\mathbf{a}$, while $\pi^k(\mathbf{r},\mathbf{a})$ is the stationary population distribution that arises from such a transition matrix. We explicitly denote the population distribution as a function of $\mathbf{r}$ and $\mathbf{a}$: each entry of the vector $\pi^k(\mathbf{r},\mathbf{a})$ is the joint probability of an individual state pair $(j, \tau)$, conditional on the aggregate state $(\mathbf{r},\mathbf{a})$. Finally, the stationary distribution implies a stationary type $k$ population count in each location $j$, which is obtained by summing across tenure states, i.e.,  through the stationary version of \ref{eq: population locals}, 
+\begin{align}\label{eq: stationary distribution population locals}
+    M^{k}_{j}(\mathbf{r},\mathbf{a}) = \sum_{\tau} \pi^k(\mathbf{r},\mathbf{a})_{[j,\tau]} M^k \quad \forall k \in \{1,\dots,K\},
+\end{align}
+where $M^k$ is type-$k$ total population and $\pi^k(\mathbf{r},\mathbf{a})_{[j,\tau]}$ is entry $(j,\tau)$ of vector $\pi^k(\mathbf{r},\mathbf{a})$.
+
+\Paragraph{Definition (Stationary equilibrium).} A \emph{stationary equilibrium} is,
+\begin{enumerate}
+    \item a vector of long-term rental prices $\mathbf{r}=(r_1,\dots,r_J)$ and a vector of short-term rental prices $\mathbf{p}=(p_1,\dots,p_J)$,
+    \item a matrix of amenities $\mathbf{a}=[a_1,\dots,a_J]$, where $a_j$ is the vector defined in \ref{eq: amenities definition a_jt},
+    \item a stationary population distribution of locals over locations and tenure $\pi^k(\mathbf{r}, \mathbf{a})$ for each type $k$, which through \ref{eq: stationary distribution population locals} delivers the type $k$ population count across locations $M^k(\mathbf{r}, \mathbf{a}) = [M_1^k(\mathbf{r}, \mathbf{a}),\dots,M_{J+1}^k(\mathbf{r}, \mathbf{a})]'$ for $k \in \{1, \dots, K\}$,
+    \item a vector of tourist population $M^{ST}(\mathbf{p}, \mathbf{a})=[M_1^{ST}(\mathbf{p}, \mathbf{a}),\dots, M_{J}^{ST}(\mathbf{p}, \mathbf{a})]'$ in short-term rentals,
+\end{enumerate}
+such that,
+\begin{enumerate}
+    \item the long-term rental market clears for every location,
+    \begin{align*}
+     \underbrace{\frac{\exp(\alpha r_{j})}{\exp(\alpha r_{j})+\exp( \alpha p_{j}-\kappa_{j})} \mathcal{H}_{j} }_{\mathcal{H}^{LT,S}_{j}(r_{j}, p_{j})} =  \underbrace{\sum_{k=1}^K M_j^k(\mathbf{r}, \mathbf{a})f^k_j }_{\mathcal{H}_j^{LT,D}(\mathbf{r}, \mathbf{a})} \quad \forall j,
+    \end{align*}
+    where $\mathcal{H}^{LT,S}_{j}(\cdot)$ is long-term housing supply defined in \ref{eq: housing supply - LT} and $\mathcal{H}_j^{LT,D}(\cdot)$ is long-term housing demand defined in \ref{eq: housing demand - LT},
+    \item the short-term rental market clears for every location,
+    \begin{align*}
+     \underbrace{\mathcal{H}_{j} - \mathcal{H}^{LT,S}_{j}(r_{j}, p_{j})}_{\mathcal{H}^{ST,S}_{j}(r_{j}, p_{j})} =   \underbrace{M^{ST}_{j}(\mathbf{p}, \mathbf{a}) f_{j}}_{\mathcal{H}^{ST,D}_{j}(\mathbf{p}, \mathbf{a})} \quad \forall j.
+    \end{align*}
+    where $\mathcal{H}^{ST,S}_{j}(\cdot)$ is short-term housing supply, defined residually from the long-term market as in \ref{eq: housing supply - ST}, and $\mathcal{H}^{ST,D}_{j}(\cdot)$ is short-term housing demand from tourists defined in \ref{eq: tourist ST demand},
+    \item the amenities market clears, by satisfying the mapping defined in \ref{eq: amenities_mapping},
+    \begin{align*}
+    a_j = \mathcal{A}(M_j) \quad \forall j,
+    \end{align*}
+    where $M_j \equiv [M_{j}^1(\mathbf{r}, \mathbf{a}),\dots, M_{j}^K(\mathbf{r}, \mathbf{a}), M_{j}^T(\mathbf{p}, \mathbf{a})]'$ is the population composition of location $j$, consisting of local types 1 through $K$ and tourists. The tourist population includes both those staying in short term rentals as well as the (exogenous) tourist population staying in hotels, defined in \ref{eq: tourist T demand} as $M^{T}_{j}(\mathbf{p}, \mathbf{a}) = M^{ST}_{j}(\mathbf{p}, \mathbf{a}) +  M^{H}_{j}(\mathbf{p}, \mathbf{a}) $.
+\end{enumerate}
+
+A useful interpretation of the equilibrium definition is that conditions 1-2 determine the population distribution of locals and tourists through the clearing of rental markets, for a given distribution of amenities. On the other hand, condition 3 determines the distribution of amenities---as firms enter to clear amenities markets---while taking the population distribution as given. Hence, by combining conditions 1-2 with  3, the population, rents, short-term rental prices, and amenities are jointly and endogenously determined in equilibrium. 
+
+In models such as ours, where population composition can have local spillovers, equilibrium uniqueness is not guaranteed. Hence, we use the observed value of prices and amenities as the starting point of our equilibrium solver as a selection rule. In Appendix \ref{sec:uniqueness} we show the equilibrium is locally unique under this rule.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Estimation}\label{sec: estimation}
+ 
+\subsection{Defining household heterogeneity}\label{sec: estimation types}
+
+We first classify households into three categories based on modal tenancy status: homeowners, private market renters, and social housing renters. First, ex-ante classification step is motivated by the fact that the average household belongs to its modal category more than 90\% of the time, suggesting this margin of adjustment is minor in our context. Second, it allows us to abstract away from the transition between renting and home-ownership. Third, it allows us to separately quantify welfare effects on homeowners and renters in our counterfactual analysis. Hence, we assume tenancy status is determined outside our model and constant over time. 
+
+After the first classification step, we classify households further into ``types" using a k-means algorithm on demographics. Existing studies typically classify households into groups based on income or skill, while others incorporate additional dimensions, such as race, due to evidence that sorting does not only happen across income levels \citep{bayer2016dynamic, davis2019long}. When the set of demographic characteristics is large, the practitioner faces a variance-bias trade-off in defining such groups: having more groups captures more heterogeneity but results in fewer observations per group, leading to noisier estimates of choice probabilities. The k-means approach allows us to solve this trade-off in a data-driven manner by exploiting correlations across observables to reduce dimensionality. Further implementation details are in Appendix \ref{sec: appendix clustering}.
+
+\conditionalinput{output/tables/clustered_demographics_group_data.tex}
+
+\Paragraph{Results.} Table \ref{fig: summary clusters} shows the six household types that result from our classification and summary statistics of their average characteristics. We give each group a label based on how prominent their characteristics are. For example, the ``Students" group is characterized by being the youngest and lowest-income, while also being high-skilled and unlikely to have children. Among household types likely to have children, social housing tenants have the lowest income and are less likely to have a Dutch ethnic background. Moving up the income distribution, we have a group of middle-aged homeowners that do not have children, which we label as ``Singles". Next, we have a group of renters that are slightly older and wealthier, but have substantially more children, which we label as ``Younger Families". Finally, the highest income group consists of older homeowners likely to have children, which we label as ``Older Families". Overall, the six types vary substantially along income, share with children, and age.
+
+\Paragraph{Household types used in estimation and counterfactuals.} We estimate the housing demand of local residents, presented in Section \ref{sec:demand_locals}, for the first three groups: ``Older Families", ``Singles", and ``Younger Families". The reason for excluding ``Students" and the two social housing types is that their residential choices are driven by non-market forces outside the scope of our model. The location choices of ``Students'' are largely determined by university policy. As for social housing tenants, their units are assigned through a centralized application system. 
+
+Despite the exclusion of these three groups in the housing demand estimation, we include all six groups---along with tourists in hotels and in short-term rentals---in the estimation of the amenity supply model described in Section \ref{sec: endogeneous_amenities}. The reason is that while residential choices might not be primarily determined by market mechanisms for all groups, as indicated in the prior paragraph, the decisions of firms supplying consumption amenities do take into account all groups regardless of how they make their housing choices. Throughout this section \ref{sec: estimation}, we show our procedure estimates housing demand and amenity supply in separate and independent blocks: estimating amenity supply only requires neighborhood-level data on population composition, so our sample restriction on the microdata for estimating housing demand does not affect our amenity supply estimates. 
+
+Finally, for our counterfactuals we include all six types of locals and tourists as part of our equilibrium definition. Because we do not have preference estimates for students and the two social renter types, we take their location choices as exogenously fixed to levels observed in the baseline data. Given we do not estimate preferences for these groups, we do not make any statements about their welfare effects in our counterfactuals. Our interpretation of keeping the locations of these groups fixed in counterfactuals is that their residential outcomes are determined by an allocation mechanism that does not respond to market forces. Therefore, our counterfactuals should be interpreted as addressing equilibrium responses from the part of the housing market that is determined through market mechanisms.
+
+\subsection{Amenities}\label{sec: amenity_supply estimation}
+Re-arranging equation \eqref{eq: amenities_N} and taking logs, we can rewrite the condition that determines the number of amenities in the sector-location pair $sj$ at time $t$ as,
+\begin{align}
+\log N_{sjt} = -  \log F_{sjt}(N_{jt})+\log \Big(\sum_k \beta_s^k  X_{jt}^k\Big),
+\end{align}
+where we define $X_{jt}^k \equiv \phi^k w^k_t M_{jt}^k$ as the total expenditure of the type $k$ population in location $j$ on consumption amenities, and $\beta_s^k \equiv \alpha_{s}^k/\sigma^s$ as a parameter that dictates how such expenditure is allocated to each amenity sector $s$. Our microdata allows us to construct $X_{jt}^k$ since income $w^k_t$ is observed in tax returns, population $M_{jt}^k$ is observed in the residential cadaster data, and $1-\phi^k$, type $k$'s housing expenditure share, is computed as the ratio of a household's annual expenditure on housing divided by income. Finally, we parameterize the fixed operating cost as follows,
+\begin{align*}
+    F_{sjt}(N_{jt}) = \Lambda_j \Lambda_t R(N_{jt})\Omega_{sjt},
+\end{align*}
+where $\Lambda_j$ and $\Lambda_t$ represent  location- and year-specific cost shifters, $R(N_{jt})$ is the annual rental price of commercial real estate, and $\Omega_{sjt}$ represents any remaining unobservable cost shifters. Because we do not have data on commercial rents, we follow a similar approach as in \cite{couture2021income} and assume that $R(N_{jt}) = N_{jt}^{\eta}$, where $\eta$ is the inverse supply elasticity of real-estate. After imposing the fixed cost parameterization, we obtain our estimating equation of amenity supply,
+\begin{align}\label{eq:amenities_regression}
+\log N_{sjt} = \lambda_j + \lambda_t - \eta \log N_{jt}+\log \Big( \sum_k \beta_{s}^k X_{jt}^k \Big) + \omega_{sjt},
+\end{align}
+where $\lambda_j \equiv - \log \Lambda_j$ , $\lambda_t \equiv - \log \Lambda_t$, $\omega_{sjt} \equiv - \log \Omega_{sjt}$. Our main objects of interest are the $\beta_s^k$ terms, which we infer from the correlation between the sectoral composition of amenities $N_{sjt}$ and the demographic composition of residents $M_{jt}^k$ (which enters \ref{eq:amenities_regression} through the household-type composition of amenity expenditure $X_{jt}^k$).
+
+
+\Paragraph{Identification.} First, similar to \cite{couture2021income} we calibrate $\eta$. We solve our fully estimated model for a range of $\eta \in [0.39, 1.52]$, which is based on the range of supply elasticities from \cite{saiz2010geographic}. We choose $\eta = 1.52$ since it delivers the best model fit, corresponding to a housing supply elasticity of 0.66, the estimate for San Francisco in \cite{saiz2010geographic}.\footnote{We consider San Francisco to be one of the most comparable US cities to Amsterdam in terms of housing supply dynamics: the housing stock of both cities grows at an approximately 1\% annual rate (see \href{https://sfplanning.org/sites/default/files/documents/reports/2021_Housing_Inventory.pdf}{San Francisco housing inventory report}, pg 17, Table 1).} In Appendix \ref{sec:appendix robustness eta} we show that the main takeaways from our counterfactuals are robust to the full range of $\eta \in [0.39, 1.52]$.
+
+The main identification problem in identifying $\beta^k_s$ from \ref{eq:amenities_regression} is simultaneity arising from the equilibrium conditions. The expenditures by household type for a given location, $X_{jt}^k$, are the outcome of residential choices made based on the availability of amenities $N_{sjt}$. Hence, any unobservable firm costs $\omega_{sjt}$ affecting $N_{sjt}$ will also affect $M_{jt}^k$ (and thus $X_{jt}^k$) in equilibrium. Because $\omega_{sjt}$ is an amenity supply shock, we require instruments that act as amenity demand shifters. 
+
+We construct an instrument that shifts population composition, and thus shifts amenity demand differentially across amenity sectors. We use the tax valuation registry to compute the stock of housing units by tenancy status $\gamma$ in location $j$, which we define as $S_{jt}^{\gamma}$, where 
+\[\gamma \in \{ \text{owner-occupied, private rental, social housing}\}.\] We then interact the wages of type $k$ with the housing stock count of their corresponding tenancy status $\gamma(k)$, constructing the following demand shifter,
+\[  Z^k_{jt} = w^k_tS_{jt}^{\gamma(k)}.\]
+The intuition behind our relevance condition is that neighborhoods primarily consisting of social housing units are more likely to be home to households qualifying for social housing assistance, leading to higher expenditure on the specific amenities such households value. The same argument holds for other tenancy types---owner- and renter-occupied units. Our exclusion restriction is therefore,
+\begin{align}\label{eq: exclusion restriction - amenity estimation}
+    \E[Z_{jt}^{k}\omega_{sjt}| \lambda_j, \lambda_t] = 0.
+\end{align}
+The above allows for locations with a specific tenancy composition to also have systematically different unobservable fixed costs for the firms supplying amenities. For example, the exclusion restriction would allow for neighborhoods composed mainly of home-owners to have higher commercial real estate rent. However, the exclusion restriction would be violated if the baseline tenancy composition is correlated with \emph{changes} in these unobservable fixed costs. For example, neighborhoods with a higher presence of owner-occupied units could be more likely to tighten local zoning restrictions on services in the future.
+
+\Paragraph{Implementation.} We use the six consumption amenities described in section \ref{sec: data}: touristic amenities, restaurants, bars, food stores, non-food stores, and nurseries. We simultaneously estimate the parameters in equation \eqref{eq:amenities_regression} for all amenities using GMM. To construct our moments, we interact our instruments with a dummy variable for each amenity $s$ so that $Z_{sjt}^k =\mathbbm{1}_sZ_{jt}^k$. We combine $Z_{sjt}^k$ with $\omega_{sjt}$ from \ref{eq:amenities_regression} to construct the term $g^{sk}(\lambda_j, \lambda_t, \beta^k_s)_{sjt} \equiv Z_{sjt}^k \omega_{sjt}$. Hence, the moment conditions that identify the $\beta^k_s$ coefficients are,
+\[ \E\Big[g^{sk}(\lambda_j, \lambda_t, \beta^k_s)_{sjt}\Big] = 0.\]
+Fixed effects are identified from the following moment conditions,
+\[ \E\Big[g^{j}(\lambda_j, \lambda_t, \beta^k_s)_{sjt}\Big] = \E\Big[ \lambda_j \omega_{sjt}\Big] = 0, \spaceand \E\Big[g^{t}(\lambda_j, \lambda_t, \beta^k_s)_{sjt}\Big] = \E\Big[ \lambda_t \omega_{sjt}\Big] = 0.\]
+We stack all moments together to form a final vector of moment conditions:
+\[\E\Big[g(\lambda_j, \lambda_t, \beta^k_s)_{sjt}\Big] = \E[Z_{sjt}\omega_{sjt}] = 0,\]
+where $Z_{sjt} \equiv  \begin{bmatrix} Z_{sjt}^1, Z_{sjt}^1, \dots,  Z_{sjt}^K, \lambda_j, \lambda_t\end{bmatrix}_{s,j,t}'$. To ensure our optimization problem is well-defined, we impose the condition $\beta^k_s \ge 0$ for all $k,s$ so that $\log \Big( \sum_k \beta_{s}^k X_{jt}^k \Big)$ always exists. Note the $\beta_s^k$ coefficients are proportional to expenditure shares in our amenity demand model from section \ref{sec: endogeneous_amenities}, which naturally have a lower bound at zero. Concretely, we solve for the following constrained optimization problem:
+\[ \max_{\lambda_j, \lambda_t, \beta^k_s} \hat{g}(\lambda_j, \lambda_t, \beta^k_s)_{sjt}'\hat{W}\hat{g}(\lambda_j, \lambda_t, \beta^k_s)_{sjt} \hspace{5mm} \text{s.t.}\hspace{2mm} \beta^k_s \ge 0 \hspace{2mm} \forall s, k,\]
+where $\hat{W} = (Z_{sjt} {Z_{sjt}}' )^{-1}$. Because some estimates lie on the boundary ($\hat{\beta}^k_s = 0$), standard inference does not apply. Hence, we construct standard errors via a Bayesian bootstrap procedure with random weighting \citep{shao2012jackknife}. 
+
+\conditionalinput{output/tables/table_output_amenity_supply_gamma_1.52.tex}
+
+\Paragraph{Results.} Our estimates for the $\beta^k_s$ parameters are shown in Table \ref{tab:amenity_supply_estimation} and broadly align with expected differences in consumption patterns across demographic groups. First, the supply of Nurseries, which is likely the amenity most targeted to locals---and specifically those with children---responds most positively to the three family groups and least to Singles and Tourists. Second, Touristic Amenities respond strongly to Tourists, as expected, but also to Students and Singles that might plausibly have similar consumption patterns to those of Tourists. Third, Restaurants respond mostly to Singles, Students, and Tourists, while Bars respond mostly to Tourists. Fourth, Food Stores estimates are the most homogeneous in that they respond to all groups in similar magnitude. This is consistent with the notion that they provide products (groceries) that are demanded homogeneously across all socioeconomic strata. In terms of magnitudes, our parameter estimates imply an exogenous increase in the number of tourists city-wide by 10\% would increase the number of firms in Touristic Amenities, Restaurants, Bars, Food Stores, Non-food Stores, and Nurseries by 2.3\%, 0.6\%, 2.3\%, 0.9\%,2.9\%, and 0\% respectively.
+
+Observe that of the 42 $\beta_s^k$ coefficients in Table \ref{tab:amenity_supply_estimation} we have 8 that are zero because our constrained optimization problem places some coefficients on the lower bound of zero. Our interpretation is that if a $\beta_s^k$ coefficient hits the lower bound, then it means the supply of sector $s$ amenities does not respond to the presence of type $k$ residents. Through the lens of our amenity demand model from section \ref{sec: endogeneous_amenities}, this non-response occurs because a coefficient of $\beta_s^k=0$ implies type $k$ agents do not spend any of their income on sector $s$ amenities. Choosing a lower bound larger than zero would ensure $\beta^k_s > 0$ and thus guarantee positive amenity expenditure shares, but we choose not to do so because this would restrict the parameter space.
+
+Finally, while we cannot directly test the exclusion restriction \ref{eq: exclusion restriction - amenity estimation}, we can provide suggestive evidence that our instrument is uncorrelated with the unobservable component of fixed costs faced by firms. To the best of our knowledge, the main change in amenity regulations during 2008-2018 was a restriction in the operating hours of restaurant outdoor dining space in residential areas. These restrictions were imposed at the precinct level, a spatial unit larger than the districts at which we implement our estimation. Hence, we can use precinct-year fixed effects to control for the unobservable costs imposed by such regulations on the firms supplying amenities. In Appendix \ref{sec: amenity supply robustness} we show that including precinct-year fixed effects does not significantly change our estimates from Table \ref{tab:amenity_supply_estimation}. We interpret this as suggestive evidence that our instruments are not significantly correlated with the unobservable fixed costs faced by firms: if they were, the precinct-year fixed effects would have changed our results significantly, given we know that amenity regulations were indeed modified at the precinct level during this period. 
+
+\subsection{Housing demand}\label{sec:demand_estimation}
+
+\subsubsection{Housing demand from locals}\label{sec:demand_estimation_locals}
+
+We estimate preference parameters of local residents using the ``Euler Equations in Conditional Choice Probabilities" (ECCP) estimator, building on \cite{aguirregabiria2010dynamic}, \cite{scott2013dynamic}, and \cite{kalouptsidi2021linear}. The method allows us to recover parameters \textit{without} taking a stance on beliefs, computing value functions, or solving the equilibrium, thus reducing computational burden. We proceed to describe the assumptions required for the estimation procedure.
+
+\Paragraph{Assumptions.} We assume the state variables $\{x, \omega, \epsilon\}$ follow a Markov process, along with the following standard assumptions:
+\begin{enumerate}
+    \item \textbf{Atomistic agents:} the market-level state $\omega$ evolves according to a Markov process that is unaffected by individual-level decisions $j$ or states $\{x, \epsilon\}$,
+        \begin{align*}
+            p(\omega'|j, x,\omega, \epsilon)=p(\omega'|\omega).
+        \end{align*}
+    \item \textbf{Conditional independence:} the transition density for the Markov process factors as,
+        \begin{align*}
+            p(x', \omega',\epsilon'| j, x, \omega, \epsilon)= p_x(x'|j,x, \omega)p_\omega(\omega'|\omega)p_\epsilon(\epsilon').
+        \end{align*}
+    \item \textbf{Payoff to outside option:} The flow payoff of living outside the city is normalized to zero, $\overline{u}^k_t(0)=0 \, \, \forall k, t.$\footnote{In a logit model the addition of a constant to all choices leads to the same choice probabilities, which implies that utility levels are not pinned down \citep{train}. Hence, we follow common practice in normalizing the payoff of the outside option to zero. Counterfactuals are identified under this normalization if the value of the outside option remains constant \citep{kalouptsidi2021identification}.}
+\end{enumerate}
+Our ECCP estimator is a two-step estimator. First, we estimate conditional choice probabilities (CCP) directly from the data, using a multinomial logit that exploits information about the conditional state. We show in Appendix \ref{sec: first stage PPML} that this approach reduces the finite sample bias relative to a non-parametric approach that estimates CCP using frequency estimators. Second, the CCP are plugged into a regression equation that relates differences in the likelihood of two different residential histories to differences in their flow payoffs. To derive this regression equation, we first introduce the concept of renewal actions.
+
+\Paragraph{Renewal actions.} 
+Two paths of actions are said to exhibit \textit{finite dependence} if after a finite number of periods, the distribution of future states is the same \citep{arcidiacono2011conditional}. In our model, finite dependence appears whenever two households living in different initial locations, $j$ and $j'$, choose to move to the same new location $\tilde{j}$. We call such an action a \textit{renewal action}, because the location tenure is reset and the distribution of future states is the same for both households. Because expectations of future payoffs are unobservable to the econometrician, a key difficulty in estimating dynamic models is disentangling variation in current payoffs from continuation values. Renewal actions separate these two components by equalizing continuation values, thus leaving differences in choice probabilities being solely a function of differences in flow payoffs. 
+
+Concretely, let $\tau(j, j_{t-1},\tau_{t-1})$ be the function that maps action $j$ and state $x_{t}=\big(j_{t-1},\tau_{t-1}\big)$ to current location capital. Consider the following path represented by Figure \ref{fig: diag renewal}: let $j$ and $j'$ denote actions chosen at state $x_{t}=\big(j_{t-1},\tau_{t-1}\big)$, reaching states $x_{t+1} = \big( j,\tau(j,j_{t-1},\tau_{t-1}) \big)$ and $x_{t+1}'=\big( j',\tau(j',j_{t-1},\tau_{t-1}) \big) $, respectively, and let $\tilde{j}$ be a renewal action chosen at time $t+1$. 
+\begin{figure}[htbp]
+\caption{Depiction of path combinations used in the estimation.}
+\centering
+\begin{tikzcd}[row sep=tiny]
+& \big( j,\tau(j,j_{t-1},\tau_{t-1}) \big) \arrow[dr] \\
+(j_{t-1},\tau_{t-1}) \arrow[ur] \arrow[dr] & & (\widetilde{j},1)\\
+& \big( j',\tau(j',j_{t-1},\tau_{t-1}) \big) \arrow[ur]
+\end{tikzcd}
+\label{fig: diag renewal}
+\end{figure}
+
+\noindent From such a path we can derive our main regression equation,
+\begin{align}\label{eq: eccp renewal action}
+   Y^k_{t,j,j',\tilde{j},x_{t}}  = \  u^k_t\left(j,x_{t}\right) -u^k_t\left(j',x_{t}\right) + \beta \left[ u^k_t\left(\tilde{j},x_{t+1}\right)-u^k_t\left(\tilde{j},x_{t+1}'\right)\right] +\tilde{\nu}^k_{t,j,j',x_{t}} & \nonumber \\
+    \text{where,} \quad  Y^k_{t,j,j',\tilde{j},x_{t}} \equiv \log \left( \frac{\Prob^k_t(j,x_{t})}{\Prob^k_t(j',x_{t})}\right)+\beta\log \left( \frac{\Prob^k_{t+1}\left(\tilde{j},x_{t+1}\right)}{\Prob^k_{t+1}\left(\tilde{j},x'_{t+1}\right)}\right). &
+\end{align}
+On the left hand side, $Y^k_{t,j,j',\tilde{j},x_{t}}$ is the likelihood of path $\{x_{t},x_{t+1}\}$ relative to path $\{x_{t},x_{t+1}'\}$. On the right hand side, we have differences in flow payoffs for the two periods in which the paths diverge, and an expectational error we label $\tilde{\nu}^k_{t,j,j',x_{t}}$. We relegate the algebraic derivation of equation \eqref{eq: eccp renewal action} to Appendix \ref{sec: appendix ECCP methodology}. 
+
+The key observation is that at time $t+1$, when two agents of the same type $k$ choose the renewal action $\tilde{j}$, they both move to the same individual state and hence their future expected payoffs are the same. Therefore, the value functions from each path cancel each other out at $t+1$ and disappear from equation \eqref{eq: eccp renewal action}, which states that differences in the likelihood of path $\big(j_{t-1},j, \tilde{j})$ relative to path $\big(j_{t-1},j', \tilde{j})$ are explained solely by differences in flow utility.
+
+
+\Paragraph{Parametric assumptions on flow utility.} We assume the component of flow utility that is common to type $k$ households has the following parametric form,
+\begin{align}\label{eq: u_bar parametric}
+\overline{u}^k_t(j) = \delta_{j}^k + \delta^k_t + \delta_{r}^k \log r_{jt} + \delta_{a}^k \log a_{jt} + \delta_b^k \log b_{jt} + \xi_{{j}t}^k, \quad \forall j\neq 0,
+\end{align}
+where preferences over observables such as rent $r_{jt}$, the vector of consumption amenities $a_{jt}$, and the vector of exogenous location characteristics $b_{jt}$ vary by type $k$. We also allow for unobservables by including fixed effects $\delta_{j}^k$ and $\delta^k_t$, and time-location varying shocks $\xi_{jt}^k$. To be clear about notation, the coefficients in \ref{eq: u_bar parametric} are all scalars except for $\delta_{a}^k$ and $\delta_{b}^k$. Recall $a_{jt}$ was defined in equation \eqref{eq: amenities definition a_jt} as a vector that lists the number of firms in each sector $s$, hence $\delta_{a}^k\equiv[\delta_{1}^k,\dots,\delta_{s}^k, \dots, \delta_{S}^k]$.
+
+ Note location fixed effects $\delta^k_j$ capture constant differences in a location $j$'s payoff with respect to the outside option. Similarly, because $\delta^k_t$ only enters the utility of inside locations, it measures how the average attractiveness of those evolves relative to the outside option. After incorporating the individual state variables, the flow payoff for a household $i$ of type $k$ in a location $j$ (inside the city) is,\footnote{For the ease of notation we are assuming a deterministic evolution of location capital $\tau$. In Appendix \ref{sec: appendix discretization of loc capital}, we show how to extend the ECCP equation to stochastic transitions.}
+\begin{align*}
+ u^k_t(j, x_{it}) = \delta_{j}^k + \delta^k_t + \delta_{r}^k \log r_{{j}t} + \delta_{a}^k \log a_{jt} + \delta_b^k \log b_{jt} + \xi_{{j}t}^k + \delta_{\tau}^k \log \tau_{it} - MC^k(j,j_{it-1}). 
+\end{align*}
+The functional form above can be derived as the indirect utility of a household that, conditional on choosing location $j$, allocates her income optimally across housing and various consumption amenities, as presented in the amenity demand  section \ref{sec: endogeneous_amenities} (derivations are in Appendix \ref{sec: appendix microfoundation-flow utility}). Importantly, the flow utility parameter for amenity sector $s$, $\delta_s^k$, maps to the amenity demand parameter $\alpha_s^k$ as follows,
+\begin{align}\label{eq: delta alpha connection}
+    \delta^k_s =  \left[\alpha^k_{s} \left(\frac{\phi^k}{\sigma_s-1}\right)  + \gamma^k_s\right]/\sigma^k_{\varepsilon},
+\end{align}
+where $\phi^k$ is the income expenditure share on all consumption amenities, $\sigma_s>1$ is the substitution elasticity across varieties within amenity sector $s$, $\sigma^k_{\varepsilon}$ is the standard deviation of type-$k$'s idiosyncratic shocks, and $\gamma^k_s$ accounts for indirect utility spillovers generated by the presence of amenity $s$ beyond utility from direct consumption. Note $\gamma^k_s$ can be negative if the amenity brings along negative spillovers. For example, if the amenity sector we are considering is bars, the term $\alpha^k_{s} \left(\frac{\phi^k}{\sigma_s-1}\right) >0$ accounts for utility gains from direct consumption at bars, while a negative $\gamma^k_s$ accounts for the dis-utility from the noise bars bring along. Hence, a negative estimate for $\delta^k_s$ can be consistent with a positive valuation for the direct consumption of the amenity ($\alpha^k_{s}>0$) if the associated spillovers are sufficiently undesirable ($\gamma^k_s$ is sufficiently negative). Relatedly, an estimate of zero for $\beta^k_{s}$ (which occurs for some $sk$ pairs in Table \ref{tab:amenity_supply_estimation}) implies $\alpha^k_{s}=0$, but this does not restrict the sign of $\delta^k_s$ since $\gamma^k_s$ can take on any sign.
+
+
+
+\Paragraph{Implementation.} To take \ref{eq: eccp renewal action} to the data we impose the parametric version of flow utility, set $j'=0$, and impose assumption 3, obtaining our final regression equation,
+\begin{align}\label{eq:final_regression_equation}
+   Y^k_{t,j,\tilde{j},x_{it}}&= \delta^k_{j} +\delta^k_{t}+ \delta^k_r\log r_{jt} + \delta^k_a\log a_{jt}  +\delta^k_{b} \log b_{jt}  + \delta^k_\tau \Delta{\tau}_{it} - \Delta{MC}^k_{it} + \tilde{\xi}^k_{t,j,x_{it}},
+\end{align}
+where,
+\begin{align*}
+\Delta\tau_{it} &\equiv \tau'(j,x_{it})-\tau'(0,x_{it}),\\
+\Delta{MC}^k_{it} &\equiv \left[MC^k(j,j_{it-1})-MC^k(0,j_{it-1})\right] - \beta\left[ MC^k(\tilde{j},j)-MC^k(\tilde{j},0)\right],
+\end{align*}
+and where the last term is the sum of the unobservable time-varying location quality and an expectational error, $\tilde{\xi}^k_{t,j,x_{it}} = \xi^k_{jt} + \tilde{\nu}^k_{t,j,x_{it}}$. 
+
+In practice, the locations in our empirical application are Amsterdam's 22 districts (``gebied'') and our sample period is 2008 to 2018. We define the outside option as any location outside Amsterdam, and our market as households that have lived in Amsterdam at least once between 2008 and 2020. We set our discount value $\beta$ equal to 0.85 \citep{de2019subsidies,diamond2019effects}. We discretize the location tenure space similar to \cite{rust1987optimal}, defining two bins of location capital: less than three years of tenure or more than four. Appendix \ref{sec: appendix discretization of loc capital} shows the technical details of the discretization of the state space. Overall, each group has a total of 46 states per year (23 past locations times two location capital states). We focus on the first three groups---Older Families, Single Households, and Younger Families---because their location choices are primarily driven by market forces, in contrast to households living in social housing or university housing. Note our Older Families and Singles groups are home-owners. In treating their location decisions in the same way as those of renters, we are implicitly assuming they are renting to themselves.
+
+
+\Paragraph{Identification.} First, we include the log of the average apartment size and the log of social housing units as additional location characteristics, $b_{jt}$. We assume the structural error $\tilde{\xi}^k_{t,j,x_{it}}$ is orthogonal to these characteristics, location fixed effects, tenure and moving costs,
+\begin{align*}
+    \E\big[ \tilde{\xi}^k_{t,j,x_{it}} | \delta^k_t, \delta^k_j , \log b_{jt},\Delta{\tau}_{it}, \Delta{MC}^k_{it}\big] =0 \ \forall k.
+\end{align*}
+Our equilibrium definition implies $\tilde{\xi}^k_{t,j,x_{it}}$ could include unobservable neighborhood trends that correlate with neighborhood rents $r_{jt}$ and amenities $a_{jt}$. Therefore, we construct a vector of instruments, $Z_{jt}$, and estimate demand parameters via two-step optimal GMM with the following moment conditions,
+\[ \E\big[ Z_{jt}\tilde{\xi}^k_{t,j,x_{it}} \big] =0 \ \forall k.\] 
+Recall the error component in equation \eqref{eq:final_regression_equation} is the sum of two components: unobservable demand shocks, ${\xi}^k_{t,j,x_{it}}$, and expectational errors, $\tilde{\nu}^k_{t,j,x_{it}}$. Observe that under rational expectations,
+\[ \E\big[ Z_{jt} \tilde{\nu}^k_{t,j,x_{it}} | \delta_j , \log b_{jt},  \Delta{\tau}_{it},\Delta{MC}^k_{it}\big] =0 \ \forall k,\] 
+as $\E[\tilde{\nu}^k_{t,j,x_{it}}|\mathcal{I}_{t}]= 0$ for all $j, t$, and $x_{it}$, where $\mathcal{I}_{t}$ is the set of variables realized at time $t$ or before. Therefore, it suffices to find instruments that are orthogonal to unobservable demand shocks,
+\[ \E\big[ Z_{jt}\xi^k_{t,j,x_{it}} | \delta_j,\log b_{jt},  \Delta{\tau}_{it},\Delta{MC}^k_{it} \big] =0 \ \forall i,k,j,t.\] 
+Because we have six amenities, we construct seven instruments in total. Three of those leverage policy changes that can be treated as supply shocks that shift tenancy composition. Concretely, new regulations on the rental market were introduced in 2011, 2015, and 2017 that changed the incentives of landlords to supply their unit as social housing, a private market unit, or as a short-term rental, respectively. See Appendix \ref{sec: appendix policy changes} for full details on each policy change. To introduce spatial variation, we interact a dummy that turns one after the introduction of the policy with the log of the units in the tenancy category exposed to the policy shock in the previous year. Two additional instruments are the log of housing units removed from the housing stock inside location $j$ as well as outside the precinct, which we also interpret as supply shocks.\footnote{The removal of housing supply can take place in several ways. One way is through demolitions, by government policy or by private initiative. Unfortunately, the microdata do not tell us the agents behind the removal of these units. Another way is that the physical buildings remain in place but lose their status as being habitable for residential purposes, thus effectively removing housing supply.}$^{,}$\footnote{A precinct (stadsdeel) is a larger spatial unit containing districts. There are seven in Amsterdam.} Finally, we follow \cite{bayer2007unified} and construct our last two instruments by using variation in changes of social housing units and the average apartment size in other areas of the city outside the precinct. Using these instruments, we find that the first stage regression of a 2SLS estimation has an F-stat of 169.8.
+
+\conditionalinput{output/tables/gmm_demand_location_choice_estimates.tex}
+
+\Paragraph{Results.} Table \ref{tab:demand_estimation_locals} shows estimates of the preference parameters in equation \eqref{eq:final_regression_equation} over moving costs, location capital, rent, and consumption amenities for our main three groups. All groups exhibit that moving is costly, with costs that increase with distance between past and current location. All households benefit from the accumulation of location capital. Estimates for rent are negative throughout.  
+
+Moving on to preferences over amenities, note the coefficients $\delta_{a}^k\equiv[\delta_{1}^k,\dots,\delta_{s}^k, \dots, \delta_{S}^k]$ from equation \eqref{eq:final_regression_equation} capture the sum of i) a positive effect from the direct consumption of the amenity, and ii) indirect spillovers that the amenity brings along (e.g., noise from bars) which can be negative. As discussed when we analyzed equation \eqref{eq: delta alpha connection}, this explains why the signs of the coefficients in Table \ref{tab:demand_estimation_locals} can be negative.
+
+Moving beyond the interpretation of the sign of the amenity coefficients, comparing the intensity of preferences across household types requires translating the estimates from Table \ref{tab:demand_estimation_locals} into willingness to pay (WTP) measures. Concretely, the WTP of group $k$ for amenity sector $s$ is computed as the ratio $-\delta^k_s/\delta^k_r$. Using our WTP measure, the coefficients from Table \ref{tab:demand_estimation_locals} imply that the two family groups are willing to increase their rent by roughly 0.14\% in exchange for a 1\% increase in the number of nurseries, while the WTP of singles for nurseries is only 0.02\%. Restaurants show a positive and significant coefficient for Singles, with a WTP of 0.3\% more in rent for a 1\% increase in the number of restaurants. For the other groups, the WTP for restaurants is closer to zero. The first two groups perceive a net negative payoff from Touristic Amenities, while the Younger Families exhibit a positive one. In terms of economic magnitude, the first two groups have a WTP of 0.1\% and 0.2\% more in rent to avoid a 1\% increase in Touristic Amenities, respectively. Non-food stores are positively valued by all groups, with the highest WTP for Younger Families. Coefficients for bars are negative for all groups, suggesting the presence of negative spillovers associated with these amenities, such as noise, that outweigh their consumption benefits. Finally, coefficients for food stores are negative for all groups. Despite the signs being negative, the ordering is fairly intuitive: the WTP of the family groups for food stores is higher (i.e., less negative) than for singles.
+
+\subsubsection{Housing demand from tourists}\label{sec:estimation_tourists}
+
+From equation \eqref{eq: tourist ST demand} and the normalization of the hotel option's payoff to zero we derive the following regression equation,
+\begin{align*}
+    \log \Prob^{ST}_{jt} - \log \Prob^{H}_t = \delta_{j}^{ST} + \delta^{ST}_t  + \delta_{p}^{ST} \log p_{{j}t} + \delta_{a}^{ST} \log a_{jt} + \xi_{{j}t}^{ST}.
+\end{align*}
+We use a yearly panel of 95 neighborhoods (wijk) for 2015-2018.\footnote{We move to a finer spatial unit in this part of our estimation because the static feature of the tourist choice problem eliminates the issue of poorly defined choice probabilities. We start in 2015 because that is when the Airbnb price data starts (listings, i.e, quantity, data go back before 2015, but prices do not).} The endogeneity challenge is that prices and amenities are a function of tourists, and therefore correlated with unobservable demand shocks $\xi_{{j}t}^{ST}$. In contrast to section \ref{sec:demand_estimation_locals}, where we deal with this endogeneity problem using an instrumental variable approach, in this part we directly include controls that account for the time-varying quality of locations as perceived by tourists.\footnote{We prefer this strategy to an IV given how short the panel is and the fact we need to instrument seven endogenous variables, limiting the statistical variation available to identify the parameters.} The reason is that, for this part, we have a direct measure of how tourists perceive the location's quality through Airbnb review data. We denote $score_{jt}$ as the score that tourists give to the location of the listing they stay in. Our identifying assumption is that there are no unobservables left after controlling for location quality, conditional on the rest of the covariates,
+\begin{align*}
+    \E[\xi_{{j}t}^{ST}|\delta_{j}^{ST} ,\delta^{ST}_t ,\log p_{{j}t},\log a_{jt}, score_{jt}] = 0.
+\end{align*}
+Results are shown in Table \ref{tab:tourist_demand}, indicating tourists prefer cheaper locations with more touristic amenities and fewer nurseries. Tourists are willing to pay a 30\% higher price for a location with twice as much touristic amenities. We also show estimates of the model without controlling for the score data. When comparing the two specifications we see that coefficients are not statistically different. We interpret this as suggestive evidence that there is little variation coming from time-varying unobservable demand shocks that inform the location choice of tourists that are also correlated with prices and amenities. 
+
+\conditionalinput{output/tables/tourist_demand_estimates.tex}
+
+\vspace{-0.75cm}
+\subsubsection{Connecting amenity demand and supply estimates to equilibrium sorting}\label{sec:connection_estimates_mechanism} 
+Our model predicts several co-location patterns between households types and amenity sectors. If $\delta^k_s > 0$ and $\beta^k_s >0$, our model predicts positive assortative patterns between type-$k$ households and the amenity $s$ sector. On the contrary, if $\delta^k_s<0$ and $\beta^k_s =0$, there is a negative assortative pattern: not only do type-$k$ households move away from locations with amenity $s$, but their presence does not lead to amenity $s$ entry. These two cases also create incentives of type-$k$ to co-locate together and, thus, acts as an agglomeration force. The intermediate case in which $\delta^k_s<0$ and $\beta^k_s >0$ is analytically ambiguous in terms of sorting patterns. Moreover, in such a case the endogeneity of amenities can be thought as a congestion force similar to rent that makes type-$k$ households disperse across locations. Given our range of estimates for $\beta^k_s $ and $\delta^k_s$ in Tables \ref{tab:amenity_supply_estimation} and \ref{tab:demand_estimation_locals}, we should see Older Families positively sort with Nurseries, Nonfood Stores, and Restaurants. Singles should positively sort with Restaurants and Nonfood Stores. Younger Families should positively sort with Nurseries and Nonfood Stores. Finally, Tourists positively sort with Touristic Amenities and Bars.
+\vspace{-0.5cm}
+\subsection{Housing supply}\label{sec: housing_supply estimation}
+Our estimating equation for the supply of long- relative to short-term units is derived by taking the log difference between the two supply choices in equation \eqref{eq: housing supply - LT},
+\begin{align*}
+    \log \mathcal{H}^{LT,S}_{jt} -\log \mathcal{H}^{ST,S}_{jt} = \alpha \left( r_{jt}- p_{jt} \right) + \kappa_{j} + \kappa_{t} +\nu_{jt},
+\end{align*}
+where we have parameterized the operating cost wedge $\kappa_{jt}$ into location- and time-fixed effects, and $\nu_{jt}$ stands for any remaining unobservables varying at the $jt$ level. 
+\Paragraph{Instruments.} OLS estimation leads to simultaneity bias from regressing quantities on prices. The solution is an instrument that shifts relative demand for short- versus long-term units. We use predicted tourist demand from a shift-share instrument: the ``shift'' part of the instrument exploits time variation in worldwide demand for STR as proxied by online search volume \citep{barron2021effect}, while the ``share'' part constructs neighborhood-level exposure to the shift from the historic spatial distribution of touristic attractions. The relevance condition is straightforward: higher predicted demand of tourists raises short- relative to long-term rental prices. The exclusion restriction holds as long as changes in the predicted tourist demand are uncorrelated with changes in the unobservable costs driving landlord's decisions. Intuitively, the exposure measure is unlikely to be correlated with changes in landlord's relative costs of renting short- versus long-term.
+
+\conditionalinput{output/tables/housing_supply_estimates_table.tex}
+
+\Paragraph{Results.} For this section we end our estimation sample in 2017 because by the end of this year the Amsterdam municipality began to restrict the number of nights that landlords could rent to tourists. We do this to estimate our housing supply elasticity during a period with a stable policy environment, thus avoiding changes in supply that are responding to regulatory changes rather than price changes. Table \ref{tab: housing_supply_ols_iv}
+presents estimates for $\alpha$, the landlord's marginal utility of income. OLS estimates are downward-biased compared to IV, as expected with simultaneity bias. Our preferred specification is the IV with two-way fixed effects, despite it being less significant than the others, which likely occurs due to little within-neighborhood variation in a short panel. Reassuringly though, IV estimates are fairly stable across all specifications. In terms of economic significance, the results imply that an increase in the gap between STR prices and long-term rental prices of one standard deviation---which is equivalent to a 29\% increase---would raise the market share of the short-term relative to the long-term segment by 13.6\%.\footnote{This number is computed as $[\exp(\hat{\alpha})-1]*0.29$, with $\hat{\alpha}=0.385$.} 
+
+\subsection{Model fit}\label{sec: model fit}
+To wrap up our estimation section, we show how our model fits the data by simulating a stationary equilibrium for 2017. We assume agents have perfect foresight, we impose the demand shocks $\xi^k_j=0$ in steady-state, we take our housing supply estimate from section \ref{sec: housing_supply estimation},and we calibrate landlords' differential costs to match the STR tourists in each location in 2017. Simulation details are in Appendix \ref{sec:appendix model fit assumptions}.
+
+\begin{figure}[ht]
+\centering
+    \caption{Model fit: Rents and STR prices}\label{fig:model_fit}
+    \begin{minipage}{0.475\textwidth}
+    \centering
+        \includegraphics[width=1\linewidth]{output/figures/model_fit/r_2017_scatter.pdf}
+    \end{minipage}%
+    \begin{minipage}{0.475\textwidth}
+    \centering
+        \includegraphics[width=1\linewidth]{output/figures/model_fit/p_2017_scatter.pdf}
+    \end{minipage}
+    \caption*{\footnotesize Notes: The figure presents scatter plots, linear fit, and 95\% confidence intervals of simulated rents and STR prices, against observed rents and prices for 22 districts. Rents are in $Euros/m^2$ per year. STR prices are average daily prices.}
+\end{figure}
+
+\begin{figure}[ht]
+\centering
+    \caption{Model fit: Amenities}\label{fig:model_fit_full}
+    \begin{minipage}{0.34\textwidth}
+    \centering
+        \includegraphics[width=1\linewidth]{output/figures/model_fit/touristic_2017_scatter.pdf}
+    \end{minipage}%
+    \begin{minipage}{0.33\textwidth}
+    \centering
+        \includegraphics[width=1\linewidth]{output/figures/model_fit/restaurants_2017_scatter.pdf}
+    \end{minipage}%
+    \begin{minipage}{0.33\textwidth}
+    \centering
+        \includegraphics[width=1\linewidth]{output/figures/model_fit/bars_2017_scatter.pdf}
+    \end{minipage}\\
+    \begin{minipage}{0.33\textwidth}
+    \centering
+        \includegraphics[width=1\linewidth]{output/figures/model_fit/food_2017_scatter.pdf}
+    \end{minipage}%
+    \begin{minipage}{0.34\textwidth}
+    \centering
+        \includegraphics[width=1\linewidth]{output/figures/model_fit/nonfood_2017_scatter.pdf}
+    \end{minipage}%
+    \begin{minipage}{0.34\textwidth}
+    \centering
+        \includegraphics[width=1\linewidth]{output/figures/model_fit/nurseries_2017_scatter.pdf}
+    \end{minipage}
+    \caption*{\footnotesize Notes: The figure presents scatter plots, linear fit, and 95\% confidence intervals of the simulated number of amenities against the observed number of amenities for 22 districts. All units are levels.}
+\end{figure}
+
+Figures \ref{fig:model_fit}-\ref{fig:model_fit_full} plot the simulated endogenous objects---rents and amenities---against the observed objects in the data, showing our model explains a large portion of the variation in rent, STR prices, and amenities by only using variation in observable characteristics, as the unobservable components of our demand model, $\xi^k_j$, are set equal to zero. Moreover, the slope of our simulated equilibrium objects and their data counterparts are not statistically different from one. We take these results as evidence that our model, estimated parameters, and equilibrium assumptions are a good approximation of the economic forces reflected in the data.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Counterfactuals}\label{sec: counterfactuals}
+
+
+\subsection{Role of preference heterogeneity for sorting and inequality}\label{sec: counterfactuals - heterogeneity}
+
+First, we evaluate how preference heterogeneity interacts with the endogeneity of amenities to determine spatial sorting and inequality across residents. We solve the model using the estimates of our baseline heterogeneous preference specification and then compare equilibrium outcomes to those of a homogeneous preference specification. For the homogeneous case we set preference parameters for consumption amenities to the average value across all household types, weighted by the size of groups.\footnote{The preferences of tourists are set to the baseline heterogeneous specification in both counterfactuals. In this section, we are only analyzing the role of preference heterogeneity among local residents.} We measure sorting with the entropy index, a common measure of residential segregation across household types, with higher values corresponding to more segregation. We measure inequality as the ratio of the highest consumer surplus household (in Euros) to that of the lowest consumer surplus household, with higher values corresponding to more inequality. Our qualitative insights are robust to other measures of inequality.
+
+The left panel of Figure \ref{fig: heterogeneous vs homogeneous - sorting} shows segregation is higher when households have heterogeneous preferences for amenities, as they have more neighborhood dimensions along which to sort. The right panel of Figure \ref{fig: heterogeneous vs homogeneous - sorting} shows that, despite increased sorting, inequality is lower when preferences are heterogeneous. This empirical result is one of our main takeaways: although heterogeneous preferences and endogenous amenities reinforce each other to generate more spatial sorting, they can also reduce welfare inequality across household types. The intuition is that heterogeneous preferences lead to more sorting, which is amplified as amenities respond and make neighborhoods more differentiated. Household inequality can fall if preferences for amenities are heterogeneous because high income groups do not compete with low income groups for the same locations, allowing low income groups to obtain their preferred amenities without having the high income groups bid up their rents. Table \ref{tab:heterogeneous vs homogeneous - neighborhood differentiation} conveys the neighborhood differentiation mechanism by showing that all amenities, except one, become more spatially clustered when preferences are heterogeneous, resulting in more differentiated neighborhoods.
+
+\begin{figure}[H]
+    \caption{Role of preference heterogeneity for spatial sorting and inequality across households.}\label{fig: heterogeneous vs homogeneous - sorting}
+    \centering
+    \includegraphics[width=0.725\linewidth]{output/figures/counterfactual_heterogeneity/bar_sorting_inequality_endo.pdf}
+    \vspace{-0.4cm}
+    \caption*{\footnotesize Notes: The left panel reports the entropy index, a measure of spatial segregation of household types: higher values indicate more segregation (see Appendix \ref{sec: appendix def entropy index} for a formal definition). The right panel reports the ratio of the highest consumer surplus household (in Euros) to that of the lowest household: higher values indicate more inequality.}
+\end{figure}
+
+\vspace{-0.6cm}
+
+\conditionalinput{output/tables/counterfactual_heterogeneity_differentiation_endo.tex}
+
+\subsection{Decomposing welfare effects of the short-term rental industry}\label{sec: counterfactuals - str entry}
+
+In analyzing STR entry, our goal is to disentangle the welfare effects for residents into two components: the increase in rent due to the reduction in housing supply, and changes in amenities due to changes in the composition of amenity demand. To separate these effects, we proceed in three steps. First, we remove the landlords' STR option and solve for equilibrium rents $r_0$ and amenities $a_0$, which we interpret as the pre-entry equilibrium. Second, we allow landlords to have an STR option but keep amenities fixed at the baseline $a_0$, and only solve for rents and STR prices, $r$ and $p$---the post-entry equilibrium with exogenous amenities. Finally, we allow landlords to have the STR option and simultaneously solve for rents $r_1$, STR prices $p_1$, and amenities $a_1$---the post-entry equilibrium with endogenous amenities.
+
+\begin{figure}[!ht]
+    \centering
+    \caption{Decomposition of welfare effects from STR entry.}
+    \label{fig: welfare changes decomposition}
+    \includegraphics[width=0.45\linewidth]{output/figures/counterfactual_airbnb_entry/bar_welfare_effects_combined.pdf}\includegraphics[width=0.45\linewidth]{output/figures/counterfactual_airbnb_entry/scatter_pref_exposure_a.pdf}%
+    \caption*{\footnotesize Notes: On the left panel, the consumption equivalent (CE) gains on the vertical axes are computed as how much extra income a household must be given in the baseline equilibrium to obtain the same utility as in the counterfactual equilibrium. Therefore, positive values indicate welfare gains due to STR entry. Details in Appendix for \ref{sec:consumer_surplus_cf}. On the right panel, the horizontal axis shows preference parameters for amenity sectors. The vertical axis shows the change in exposure to amenity $s$ after STR entry for a type $k$ household, defined as $\Delta_s^k \equiv \sum_j \Delta N_{sj} \times \omega_j^k$, where $\Delta N_{sj}$ is the change in sector $s$ amenities in location $j$ after STR entry, weighted by $\omega_j^k = M_j^k/M^k$, location $j$'s share of the city-wide population of type $k$ before STR entry. Hence, $\omega_j^k$ is type $k$'s exposure to location $j$.}
+\end{figure}
+\vspace{-0.5cm}
+The left panel of Figure \ref{fig: welfare changes decomposition} shows the welfare effects from STR entry measured in consumption equivalent (CE) terms: how much extra income a household must be given in the pre-entry equilibrium to be as well off as in the counterfactual post-entry.\footnote{In all cases we take into account differences in home-ownership across household types when computing welfare. Given Table \ref{fig: summary clusters}, we treat Older Families and Singles as homeowners and Younger Families as renters. Given homeowners rent to themselves, the increase in rent they face due to STR entry is returned to them as landlord income. Details on welfare calculations are in Appendix \ref{sec:appendix_measuring_welfare}.} Therefore, positive values indicate welfare gains from STR entry. The dark bars show that, under exogenous amenities, every household loses because STR entry reduces housing supply and raises rents. The magnitudes of the losses are similar across household types and equivalent to an income tax between 1-2\%.
+
+The light bars show the welfare effects when amenities are allowed to endogenously respond to residential composition. The key insight is that while all residents lose due to higher rent, their losses may be compensated or amplified depending on how they value the changes in amenities tourists bring along. Older Families lose more than when amenities were exogenous because on top of facing higher rent they also lose the amenities they value most. On the other hand, Singles and Younger Families now obtain welfare gains because they face an increase in the amenities they like, offsetting losses from higher rent. This mechanism is clearest by looking at the right panel of Figure \ref{fig: welfare changes decomposition}, which plots the correlation between a household type's preferences for amenities and the amenity changes they are exposed to following STR entry. The negative slope for Older Families implies they are losing access to the amenities they value most. The positive slope for the other groups implies they are gaining access to the amenities they value most. 
+
+\begin{figure}[H]
+\centering
+\caption{Effect of STR entry on amenities and baseline distribution of households.}\label{fig: counterfactual airbnb entry - map - population - amenities}
+\caption*{Panel A: Percentage point change in amenities after STR entry.}
+\includegraphics[width=0.8\linewidth]
+{output/figures/counterfactual_airbnb_entry/map_amenity_effects_pp.pdf}
+\vspace{0.25cm}
+\caption*{Panel B: Baseline population shares before STR entry.}
+\includegraphics[width=0.8\linewidth]{output/figures/counterfactual_airbnb_entry/map_pop_baseline_share.pdf}
+\caption*{\footnotesize Notes: Panel A shows changes in the number of establishments by amenity sector after STR entry. Panel B shows the baseline neighborhood population share of each household type before STR entry, i.e., a measure of exposure to the amenity changes from Panel A. To facilitate comparison between equilibria, we always initialize our equilibrium solver from Appendix \ref{sec: equilibrium_solver} with the observed vectors of rents and amenities.}
+\end{figure}
+
+Finally, Figure \ref{fig: counterfactual airbnb entry - map - population - amenities} maps the changes amenities across space and the baseline exposure of each household type to such changes. Note touristic amenities and bars expand the most in locations originally populated by Older Families, and that this group ranks these two amenities among its three least desirable, which explains this group's negative slope in the right panel of Figure \ref{fig: welfare changes decomposition}.
+
+As a final takeaway, note Older Families are the highest-income group and are subject to a welfare loss equivalent to a 5\% income tax according to Figure \ref{fig: welfare changes decomposition}. Singles and Younger Families, which are poorer, are subject to welfare gains ranging between 1-3\% of their income. In this sense, STR entry is progressive because the higher income group is implicitly taxed at a higher rate. Note this progressive pattern did not hold with exogenous amenities, since the implicit tax was highest on Younger Families, the middle income group.  In this sense, accounting for the endogeneity of amenities can matter for incidence qualitatively, not just quantitatively.
+
+
+\subsection{Policy implications for targeting of amenities}\label{sec: counterfactuals - tax and zoning}
+
+Given our model has both amenity and housing markets, we can compare urban policies that operate separately through each of them. For the purposes of regulating mass tourism, consider two policy levers: a short-term rental (STR) tax or a touristic amenities (TA) tax. The STR tax is a housing policy: its goal is to increase housing supply for locals and improve welfare through rent reductions. The TA tax is an amenity-market policy: it targets certain amenities without directly altering others, but may do so indirectly through equilibrium effects.
+
+\begin{figure}[ht]
+    \centering
+    \caption{Welfare effects: short-term rental tax vs. touristic amenity tax.}\label{fig: counterfactual taxes}
+    \includegraphics[width=1\linewidth]{output/figures/tax_CF_group_combined.pdf}
+    \caption*{\footnotesize Notes: The figure reports consumer surplus (measured as \% of income) for each household type under each tax rate.}
+\end{figure}
+
+Figure \ref{fig: counterfactual taxes} shows how welfare changes as we gradually increase the tax rate, for each type of tax. First, note that the welfare of all groups is monotonically increasing in the STR tax because the policy reduces rent, and all groups agree they prefer lower rent. However, the rate at which welfare increases is highest for Older Families, since the reduction in STR units also leads to less tourists and touristic amenities, and they especially dislike touristic amenities relative to the other groups.
+
+Second, the shared monotonicity of the tax rate does not hold for the TA tax because the groups disagree on this amenity's desirability. While the welfare of Older Families is increasing, the welfare the other groups is decreasing. This is because Older Families especially dislike touristic amenities and Younger Families value them positively. The case of Singles is more nuanced because they dislike touristic amenities yet somehow lose as the TA tax is increased. The reason is they highly value restaurants, which tend to co-locate with touristic amenities. To see this, note from our amenity supply estimates in Table \ref{tab:amenity_supply_estimation} that the supply of touristic amenities and restaurants coincide in that they respond strongly to Singles and Tourists. Taxing touristic amenities leads to less Tourists, lowering the supply of restaurants, thus hurting Singles. This highlights the importance of understanding heterogeneity in supply responses of amenities in addition to preference heterogeneity.
+
+To conclude, the incidence of regulating the housing or the amenity market hinges on both preference heterogeneity and supply-side heterogeneity. Therefore, the choice of which policy lever to use depends on the interaction between preference and supply correlations and the distributional objectives of a regulator.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Concluding remarks}\label{sec: discussion}
+
+We study the role of preference heterogeneity over a set of endogenous location amenities in shaping within-city sorting and welfare inequality. To do so, we build a model of residential choice where heterogeneous, forward-looking households consume a bundle of amenities provided by firms in a market for non-tradables. In contrast to work that collapses amenities into a one-dimensional index, we microfound how different consumption amenities arise in equilibrium, endogenizing the extent to which neighborhoods become horizontally differentiated.
+
+Our empirical findings suggest substantial heterogeneity in the preferences of residents for different amenities, as well as in the supply responses of different types of amenities to local demographics. We find that while the endogeneity of amenities reinforces sorting across space, it has ambiguous effects on inequality across households. Concretely, inequality can fall when neighborhoods become horizontally differentiated through the endogenous response of amenities to the sorting of households. Thus, low-income households may sort into neighborhoods only they find desirable, without high-income households bidding up their rents. We also show how the distributional incidence of urban policies depends on heterogeneity on both demand and supply side of the amenities market. While our model is rich in many dimensions, it is tailored to answer a specific set of questions while remaining silent on others. In our concluding remarks, we discuss the limitations of our analysis and potential extensions for future work.
+
+\Paragraph{Amenity quality.} We do not consider quality differences within an amenity sector because we do not have the firm-level data required to incorporate this dimension. Hence, in our model, amenities are only differentiated horizontally. If we had quality data, then the nature of differentiation across amenities would be a mix of horizontal and vertical dimensions. How would this affect our takeaways? Note our counterfactual in section \ref{sec: counterfactuals - heterogeneity} speaks to this because it shows how the degree of horizontal differentiation (measured as the degree of preference heterogeneity) matters for sorting and inequality. To the extent adding amenity quality is a way of dampening horizontal in favor of vertical differentiation, because quality is desired by all groups, we would expect our results to qualitatively change in the direction of the case of homogeneous preferences---there would be less scope to reduce inequality through sorting and the horizontal differentiation of neighborhoods.
+
+\Paragraph{Non-stationarity and transitional dynamics.} The role of our model's dynamic elements is to estimate unbiased preference parameters \citep{bayer2016dynamic,traiberman2019occupations}. To highlight economic mechanisms, our counterfactuals focus on stationary equilibria. The reason is that we are interested in long-run changes that result from the interaction between preference heterogeneity and endogeneity of amenities. It is the cross-sectional correlation between household preferences over amenities and supply responses of amenities to demographics that is at the core of our economic mechanisms. In this sense, it is unclear a-priori that introducing transitional dynamics would significantly change the qualitative nature of our mechanisms, beyond separately quantifying short- versus long-run impacts. Given the stationary analysis already imposes substantial technical complexity, as well as conceptual complexity in understanding how each model ingredient contributes to economic mechanisms, we leave transitional dynamics as an interesting avenue for future research.
+
+
+\Paragraph{Consuming amenities outside the residential location.} We assume consumers only access amenities in their residential location. An empirical application that relaxes this assumption requires data on consumption trips across neighborhoods, which we do not have for Amsterdam. Note that our mechanisms are driven by the positive correlation between residential location and amenity consumption. Under our assumption of no commuting to consume, the correlation is perfect. Allowing for commuting would weaken this relationship, but part of the correlation would survive as long as commuting costs depend on distance from home. While we cannot quantify such costs in our setting due to data limitations, smartphone-based evidence from other cities  suggests urban residents tend to consume amenities located near their home \citep{miyauchi2021consumption, allen2021tourism}. To the extent this positive correlation between residential location and amenity consumption is also valid in our setting, we expect our main qualitative insights to hold.
+
+\setlength{\bibsep}{0pt}
+\bibliographystyle{oega} %compatible with longnamesfirst
+{\footnotesize\bibliography{references}}
+
+\appendix
+\section{Online Appendix}
+
+\onehalfspacing
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Institutional background}\label{sec: appendix institutional}
+
+\subsubsection{Policy changes in the Amsterdam real estate market}\label{sec: appendix policy changes}
+
+\Paragraph{Change in Housing Point System (2011):} Classification of a unit as social is determined by an annually updated national point system, with units below 143 points being classified as social. Until 2011, the number of points was based solely on the unit's physical attributes. In response to rental supply scarcity, the Dutch government designated 140 areas nationwide as having a ``housing shortage" and implemented a 25-point increase for all rental units in these areas. As a consequence, this policy reduced the supply of social housing units and increased the supply of private rental units. In Amsterdam, it is estimated that 28,000 out of a total of 200,000 social housing units would shift to the private market  \citep{van_perlo_alle_2011}. 
+
+\Paragraph{Decrease in Default Lease Duration (2015):} While landlords could historically terminate a rental contract based on certain legal grounds, the contract duration was by default ``indefinite.'' The only way a landlord could increase rents was with a new lease---to an existing or to a new renter in the private market---or to index the initial lease to inflation. This left little room for landlords to increase rents within a lease. In 2015, a new law, ``Wet Doorstroming Huurmarkt 2015", changed the standard duration of new contracts from indefinite to two years, with options to contract on even shorter duration \citep{koninkrijksrelaties_wet_nodate}. After the initial two years, the landlord had the option to offer the current tenant a new lease with a new price, but which had to be of indefinite duration. As a consequence, landlords had the incentive to find new tenants willing to pay higher prices for an initial two years, rather than renew an existing tenant's contract indefinitely \citep{koninkrijksrelaties_evaluatie_2021}, thus increasing private rental market supply.
+
+\Paragraph{Regulation of Vacation Rental Properties (2017):} Due to the expansion of short-term rentals and tourism, the city of Amsterdam  implemented strict regulations on the hospitality sector. First, the policy limited the construction of new hotels \citep{botman_wet_2021}. Second, the city also required landlords to report all units they rented out as vacation rentals. Third, the city also set a maximum number of nights a property could be rented per year, initially set to sixty nights at the end of 2017 and tightened to only thirty nights in 2019. Together, these laws aimed to lower the incentives to rent short-term to tourists, and thus increase rental supply for locals. 
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Data}\label{sec: appendix data}
+
+\subsubsection{Residential histories and household characteristics}\label{sec: appendix data demographics}
+
+First, we construct an annual panel of location choices starting in 1995 using the registry (cadaster) data. The cadaster gives us a history of addresses for all individuals in the Netherlands from 1995-2020. For every individual, we pick their modal address each year. In terms of demographics, we keep individuals between 18-70 years old. We also observe country of origin of the household head, which we classify into four broad categories: Dutch, Dutch Indies, Western (OECD), and Non-Western. With regards to skill, we observe the graduation date and degree type for everyone completing a high school degree and beyond for 1999-2020. We classify households according to the highest achieved level of education into low, medium, and high skill for those with high school (VMBO) or less, vocation or selective secondary education (HAVO, VWO, MBO), or college and more (HBO, WO), respectively. Finally, we observe household-level tax returns for 2008-2020 with information on: gross and after-tax income, number of household members, an imputed measure of income per person, and household composition categories. The household composition data allows us to see whether the household has children. For our dynamic location choice estimation sample, we focus on heads of household as identified by the tax data. We keep those households who have lived at least one year in Amsterdam since 1995, household head's age is between 18-70 years, and have at least one year with reported tax return information. 
+
+
+\subsubsection{Housing characteristics, tax appraisal values, and transaction prices}\label{sec: appendix housing characteristics}
+
+First, for every housing unit we observe the year it was built, the floor area in square meters, a categorical variable about the life stage of the property, and the usage category for 2011-2020. There are 11 usage types: residential, sport, events, incarceration, healthcare, industrial, office, education, retail, and other. There are six types of life-stage categories: constructed, not constructed, in process of construction, in use, demolished, and not in use. We also observe any changes to these characteristics. For example, we can see if a unit previously classified as residential is now considered commercial. With these transitions, we see that virtually no residential units convert to another usage type such as commercial and vice-versa. Given this segmentation, we only keep housing units classified as residential. Moreover, these data inform us about the extent of new construction. On average, new units make 1.2\% of the residential housing stock on a yearly basis.
+
+\conditionalinput{output/tables/woz_transaction_values.tex}
+
+Second, we observe a panel of housing values and characteristics for all properties in the Netherlands from 2006-2019. We observe annual tax appraisal values (WOZ) and geo-coordinates. These data are annually collected by the government to assess every property WOZ value and tax accordingly. The WOZ value of a property is constructed by comparing the value of nearby transacted properties in the neighbourhood and physical housing characteristics like size, house type, and construction year. We can compare WOZ appraisal values to the subset of properties that are transacted to see how well they track market values. Table \ref{tab:woz_value_transaction_values} shows WOZ values correlate almost one-to-one with transaction prices and exhibit a high degree of predictive power. We take this as evidence that WOZ values are informative of market values. These data also contain information about the occupant's tenancy status: homeowner, private renter, or social housing renter. We use these categories to classify households across different segments of the housing market. 
+
+
+\subsubsection{Linking households to housing units}
+
+We merge the housing unit panel to the household location panel through the property identifier. We can then see tenancy status and and number of occupants per unit. We keep housing units with less than six occupants---those below 99th percentile of occupant distribution---to eliminate residential units not inhabited by regular households, such as university student halls or nursing homes.
+
+
+\subsubsection{Rent imputation}\label{sec:rent_imputation}
+
+Our microdata has information on physical characteristics and tax appraisal values for the universe of housing units in the Netherlands. However, we only observe rents for a subset of  units. Because we need an annual panel of housing prices at the neighborhood level, we impute rents using tax valuations. 
+
+\conditionalinput{output/tables/imputation_results.tex}
+
+First, we link microdata from the universe of housing units to a national rent survey which contains roughly 13,000 observations of units in the rental market between 2006-2019. We use the matched subset in the rental survey with their tax valuation information to predict rents for housing units that do not appear in the survey but do appear in the property value data as renter-occupied. We keep only properties that are rented in the private rental market and not in social housing. We predict total rental prices and rental prices by square meter on the properties that are classified as private rental units from the tax appraisal data. We use two methods: linear regression and random forest. In both cases we use tax-appraisal values, official categories for measures of quality, total floor area, number of rooms, latitude and longitude coordinates, time fixed effects, and wijk-code fixed effects. We train our algorithms in 90\% of the sample and test out-of-sample predictive power in 10\% of the sample. For the hedonic linear regression, the in-sample $R^2$ for total rental prices is 0.637 while the out-of-sample $R^2$ is 0.629. Similarly, the random forest delivers an in-sample $R^2$ of 0.813 and out-of-sample $R^2$ of 0.782. The random forest model has a substantially better performance in terms of predictive power, both in-sample and out-of-sample. Table \ref{tab:imputation_results} shows that when regressing imputed on observed rental prices, the random forest also outperforms classic linear regression.
+
+\subsubsection{Decreasing hazard rate of moving}\label{sec: evidence hazard rate} 
+
+\begin{figure}[H]
+    \caption{Probability of changing residence, conditional on past location tenure.}
+    \label{fig: hazard_rate_all}
+    \centering
+    \includegraphics[scale = 0.7]{output/figures/stylized_facts/hazard_rate.png}
+    \begin{minipage}{\textwidth}{\scriptsize Notes: Figure shows probability of moving out of the current location conditional on the number of years lived in the location. We take averages across individuals who are not social housing residents and across time. Moving probabilities and tenure are constructed using location choice panel derived from the CBS cadaster, described in section \ref{sec: appendix data demographics}.}
+    \end{minipage}
+\end{figure}
+
+Figure \ref{fig: hazard_rate_all} shows the hazard rate of moving is decreasing in a household's tenure at the prior residence. This behavior can be rationalized by the inclusion of neighborhood-specific capital that accumulates over time and is lost upon moving.
+
+
+\subsubsection{Housing expenditure shares}\label{sec: consumption shares}
+With our rent imputation from section \ref{sec:rent_imputation} we can predict rental prices for all residential units of the city. We compute the share of income spent on housing for households in the private rental market by dividing the predicted rental price by their after-tax income. For households in social housing, we use instead the yearly maximum social housing rent. Finally, we estimate housing expenditures shares by taking the median observation conditional on demographic type and year. These housing expenditure shares map to the term $1- \phi^k$ in Section \ref{sec: appendix microfoundation-amenity demand}.
+
+\subsubsection{Constructing Airbnb supply and prices}\label{sec: appendix data - airbnb} 
+
+A challenge with the web-scraped Inside Airbnb data is that some listings may be inactive, thus overstating Airbnb supply. To address this we focus on listings that are sufficiently ``active''. Using calendar availability data, we say a listing is ``active'' in month $t$ if it has been reviewed by a guest or its calendar has been updated by its host in month $t$. Moreover, we want to separately identify listings in which the host lives in the unit and shares it with guests, from those in which there is no sharing. The former does not reduce housing stock for locals, while the latter does. We define a listing as ``commercially operated" if it is an entire-home listing, has received new reviews over the past year, and has ``sufficient booking activity" such that it is implausible a local is living in the unit permanently. A listing has ``sufficient booking activity" if it satisfies any of the following three conditions:
+\begin{enumerate}
+	    \item It has been booked over 60 nights in the past year: this is equivalent to over 10 new reviews given an average review rate of 67\% \citep{fradkin2018determinants} and an average stay length of 3.9 nights (source: \href{https://press.airbnb.com/instant-book-updates/}{press.airbnb.com}).
+		\item It shows intent to be booked for many nights over the upcoming year: the listing is available for more than 90 nights over the upcoming year and the ``instant book" feature is turned on.
+		\item It has had frequent updates, reflecting intent to be booked even though it may not have the ``instant book" feature turned on: the listing has been actively available for more than 90 nights over the upcoming year and this has happened at least twice within the past year.
+\end{enumerate}
+A limitation of the data is webscrapes begin in 2015, so we impute listings pre-2015 using calendar and review data. We can only do this for listings that survived up to 2015, therefore our measure of pre- 2015 listings is a conservative lower bound. 
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Theory}
+
+\subsubsection{Derivations of amenity demand}\label{sec: appendix microfoundation-amenity demand}
+
+This section derives the amenity demand equation from section \ref{sec: endogeneous_amenities}. We model the household decision of how much housing and amenities to consume conditional on living in a specific location. We omit time subscripts unless necessary.
+
+\Paragraph{Allocating expenditure between housing and consumption amenities.} First, conditional on living in location $j$, a type $k$ household with Cobb-Douglas preferences chooses how much of its wage $w^k$ to spend on housing $H_j$ and on a bundle of locally available consumption amenities $C_j$,
+\begin{align}
+\max_{\{H_{j},C_{j}\}} \quad  A_j^k H_{j}^{1-\phi^k} C_{j}^{\phi^k}  \quad \text{s.t.} \quad r_{j}H_{j}+P_{Cj}C_{j}=w^k,\label{eq:main_consumption_problem}
+\end{align}
+where $r_j$ is the rental price, $P_{Cj}$ is the price of the consumption bundle, $\phi^k$ is the expenditure share parameter for consumption amenities, and $A_j^k$ represents the household's valuation of the location's non-market attributes ($A_j^k$ could represent public goods such as noise or pollution). The optimal choice of housing is $H_{j}^{*,k} = (1-\phi^k) \frac{w^k}{r_j}$. Therefore, the income left over for amenity consumption is $\phi^k w^k$. 
+
+\Paragraph{Allocating expenditure across different consumption amenity sectors and varieties.} Consumption amenities are classified into sectors indexed $s=1,\dots, S$ (e.g., ``restaurants" is a sector), and firms/varieties are indexed $i$ within each sector (e.g., an Italian restaurant is a firm/variety). The amenity consumption problem is, 
+\begin{align}\label{eq: amenities derivation varieties}
+\max_{\{q_{isj}^k\}_{is}}   C^k_{j} \ \text{s.t.} \ \sum_{is} p_{isj} q_{isj}^k= \phi^k w^k, \text{ where }  C^k_{j} \equiv \prod_{s=1}^{S} \left[ \left(\sum_{i=1,\dots,N_{sj}} {q_{isj}^k}^{\frac{\sigma_s-1}{\sigma_s}}\right)^{\frac{\sigma_s}{\sigma_s-1}}\right]^{\alpha^k_{s}}.
+\end{align}
+$C^k_{j}$ is the amenities bundle, $q_{isj}^k$ is the quantity demanded of variety $i$ in sector-location pair $sj$, $N_{sj}$ is the number of firms/varieties in the sector-location, and $p_{isj}$ is the price of variety $i$ in sector-location $sj$. Note $C^k_j$ aggregates consumption amenities across sectors and varieties in a way that is specific to each type $k$: it implies Cobb-Douglas preferences over amenity sectors (with weights $\alpha^k_{s}$, such that $\sum_s \alpha^k_s = 1$) and CES preferences over varieties within an amenity sector (with substitution elasticity $\sigma_s>1$).\footnote{Observe that expenditure shares in sector $s$ are identical for households of type $j$ across all neighborhoods $j$. However, type-$k$ households' utility from consumption amenities differs due to the love-of-variety effect that stems from CES preferences.} Taking first order conditions with respect to $q_{isj}^k$, and then combining the FOC for two varieties $i$ and $i'$ in the same sector $s$ we obtain,
+\begin{align*}
+    \frac{q_{isj}^k}{q_{i'sj}^k} = \left( \frac{p_{isj}}{p_{i'sj}} \right)^{-\sigma_s}.
+\end{align*}
+Furthermore, total expenditure on sector $s$ is $\alpha^k_{s} \phi^k w^k$ and equal to $\sum_{i \in s} p_{isj}q_{isj}^k$. Using this in the equation above, we obtain type $k$ demand for variety $i$ in $sj$, i.e., the amenity demand equation from section \ref{sec: endogeneous_amenities} of the main text,
+\begin{align*}
+    q_{isj}^k = \frac{\alpha^k_{s} \phi^k w^k}{p_{isj}} \left(\frac{p_{isj}}{P_{sj}}\right)^{1-\sigma_s}, \quad \text{ with } P_{sj} \equiv \left(\sum_{i=1}^{N_{sj}} p_{isj}^{1-\sigma_s} \right)^{\frac{1}{1-\sigma_s}},
+\end{align*}
+
+\subsubsection{Flow utility specification}\label{sec: appendix microfoundation-flow utility}
+
+This section derives the parametric form for flow utility used in estimation in section \ref{sec:demand_estimation_locals} of the main text and its connection to the amenity demand parameters.
+
+\Paragraph{Indirect utility from housing and amenity demand problem.} Given our assumption that marginal costs are constant within a sector-location, the equilibrium of the firm-pricing game is symmetric within a sector-location, thus $p_{isj}=p_{sj} \ \forall i \in sj$. Hence, consumers buy an equal amount of amenities from every firm within the same sector-location. Type $k$ demand for the individual firm $i$ is,
+\begin{align}\label{eq:optimal_amenity_choice}
+    q_{isj}^k = q_{sj}^k = \frac{\alpha^k_{s} \phi^k w^k}{p_{sj}N_{sj}} \ \forall i \in sj.
+\end{align}
+To obtain the indirect utility of living in $j$, we use the equation above to get the optimal amenity bundle $C_{j}^*$, which along with the optimal housing choice $H_{j}^*$, is substituted in equation \eqref{eq:main_consumption_problem}. To take the indirect utility specification to the data we also reintroduce time subscripts, and impose a flexible form for $A_{jt}^k$,
+\begin{align}\label{eq: microfoundation indirect utility}
+A_{jt}^k  \underbrace{\frac{w_t^k}{{r_{jt}}^{1-\phi^k}}   \Bigg(\prod_s\left[  N_{sjt}^{\frac{1}{\sigma_s-1}} / p_{sjt} \right]^{\alpha^k_{s}}\Bigg)^{\phi^k} \varphi^k}_{ ={H_{j}^*}^{1-\phi^k} {C_{j}^*}^{\phi^k}  } ,  \text{ with }  A_{jt}^k \equiv A_jA_t \left(\prod_s N_{sjt}^{\gamma_s^k}\right) b_{jt}^{\alpha^k_b} \tau^{\nu^k}_t \Xi_{jt}^k,
+\end{align}
+and where $\varphi^k \equiv  (1-\phi^k)^{1-\phi^k} (\phi^k)^{\phi^k} \prod_s (\alpha^k_s)^{\alpha^k_s \phi^k}$ is a type-$k$ constant. We assume the valuation of local non-market attributes $A_{jt}^k$ is decomposed as follows: $A_j$ is a fixed location attribute that is unobservable to the econometrician, $A_t$ are unobservable shocks common to all locations in the city, $N_{sjt}^{\gamma_s^k}$ is a utility spillover derived from the nearby presence of amenities beyond the direct consumption itself (which could be dis-utility, such as noise from bars), $\tau^{\nu^k}_t$ is utility from location capital with $\nu^k>0$, $b_{jt}$ are exogenous time-varying location characteristics that are observable (such as the presence of public housing), and $\Xi_{jt}^k$ are time-varying location attributes that are unobservable. The purpose of \ref{eq: microfoundation indirect utility}, especially specifying  $A_{jt}^k$, is to take the theoretical choice problem to the data and be transparent about what the econometrician does and does not observe. Taking logs of \ref{eq: microfoundation indirect utility}, and adding a type I EV error $\varepsilon_{ijt}$,
+\begin{align*}
+   \mu_j^k + \mu_t^k - & (1-\phi^k) \log r_{jt} +  \sum_s \big(\frac{\alpha^k_{s}\phi^k}{\sigma_s-1}  + \gamma^k_s\big)\log N_{sjt} + \alpha^k_b\log b_{jt} + \nu^k \log \tau_t + \xi_{jt}^k + \varepsilon_{ijt}, 
+\end{align*}
+where $\mu_j^k \equiv \log A_j^k + \log \varphi^k$, 
+$\mu_t^k \equiv \log A_t^k + \log w_t^k$, and  $\xi_{jt}^k \equiv  - \phi^k \sum_s \alpha^k_{s} \log p_{sjt} + \log \Xi_{jt}^k $. Because the level of utility with type I EV errors is not identified, we normalize the variance of the shock to $\frac{\pi^2}{6}$ by dividing the equation above by $\sigma^k_\varepsilon$,
+\begin{align}\label{eq: appendix indirect utility log N}
+   \delta_j^k + \delta_t^k + & \delta_{r}^k \log r_{jt} + \sum_s  \delta_{s}^k \log N_{sjt} + \delta_{b}^k \log b_{jt} + \delta_{\tau}^k \log \tau_t + \xi_{jt}^k + \epsilon_{ijt},
+\end{align}
+where the $\delta$ coefficients are the normalized parameters after dividing by $\sigma_\varepsilon^k$. Finally, to get to the exact flow utility specification from section \ref{sec:demand_estimation_locals} of the main text, we define the indirect utility as \ref{eq: appendix indirect utility log N} net of the type I EV shock, we introduce the moving cost, and rewrite $\sum_s  \delta_{s}^k \log N_{sjt}$ in its vector-notation analogue $\delta_{a}^k \log a_{jt}$,\footnote{Where  $\delta_{a}^k\equiv[\delta_{1}^k,\dots, \delta_{S}^k]$ and $\log a_{jt}\equiv[\log N_{1jt},\dots,\log N_{Sjt}]'$.}
+\begin{align*}
+     u^k_t(j, x_{it}) \equiv \delta_j^k + \delta_t^k + \delta_{r}^k \log r_{jt} + \delta_{a}^k \log a_{jt} + \delta_{b}^k \log b_{jt} + \delta_{\tau}^k \log \tau_t - MC^k(j,j_{t-1})  + \xi_{jt}^k.
+\end{align*}
+
+\Paragraph{Connection between flow utility parameters and amenity demand parameters.} Observe that the flow utility parameters in the last equation above are a function of the parameters of the housing and amenity choice problem,
+\begin{align*}
+    \delta^k_s = \left(\frac{\alpha^k_{s}\phi^k}{\sigma_s-1}  + \gamma^k_s \right)/\sigma^k_\varepsilon \spaceand \delta^k_r = -(1-\phi^k)/\sigma^k_\varepsilon.
+\end{align*}
+Note the preference parameter for the sector $s$ amenity, $\delta^k_s$, can be positive or negative. The first term, $\frac{\alpha^k_{s}\phi^k}{\sigma_s-1}$, is non-negative because the Cobb-Douglas preference parameter for amenity sector $s$ $\alpha_s^k$ is non-negative (consuming the amenity cannot decrease utility). The second term, $\gamma^k_s$, can be positive or negative because it measures how the presence of amenity $s$ impacts utility beyond direct consumption through spillovers that can be positive or negative (for example, noise from bars). 
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Simulation details}\label{sec:appendix counterfactuals}
+
+\subsubsection{Outline of the equilibrium solver algorithm}\label{sec: equilibrium_solver}
+We use a nested fixed-point algorithm to solve our model equilibrium. In the inner loop, we solve for the equilibrium vector of long- and short-term rental prices, given a fixed matrix of amenities. In the outer loop, we then solve for equilibrium amenities. The algorithm is as follows: fix parameters $\lambda \in (0,1)$ and $\delta_r, \delta_p > 0$. The outer loop proceeds as follows for step $t=1,\dots$
+
+\noindent $\mathbf{(O_1^t)}$ Guess $\mathbf{a}^{(t)}$. The inner loop proceeds as follows for step $g=1,\dots$
+
+$(\mathbf{I}_1^g)$ Guess $\mathbf{r}^{(g)}$ and $\mathbf{p}^{(g)}$
+
+$(\mathbf{I}_2^g)$ Compute excess demand for long- and short-term housing:
+\begin{align*}
+\mathbf{z}^L(\mathbf{r}^{(g)},\mathbf{p}^{(g)},\mathbf{a}^{(t)}) \text{ and }  \mathbf{z}^S(\mathbf{r}^{(g)},\mathbf{p}^{(g)},\mathbf{a}^{(t)})
+\end{align*}
+
+$(\mathbf{I}_3^g)$ Update prices using excess demands,
+\begin{align*}
+    \mathbf{r}^{(g+1)} &= \mathbf{r}^{(g)} + \delta_r \cdot  \mathbf{z}^L(\mathbf{r}^{(g)},\mathbf{p}^{(g)},\mathbf{a}^{(t)}) \\
+    \mathbf{p}^{(g+1)} &= \mathbf{p}^{(g)} + \delta_p \cdot  \mathbf{z}^S(\mathbf{r}^{(g)},\mathbf{p}^{(g)},\mathbf{a}^{(t)})
+\end{align*}
+
+$(\mathbf{I}_3^g)$ Compute $d_{r,p}^{(g)} = \max \Big\{ ||\mathbf{r}^{(g+1)} - \mathbf{r}^{(g)}||_{\infty}, ||\mathbf{p}^{(g+1)} - \mathbf{p}^{(g)}||_{\infty} \Big\}$ 
+
+Iterate until step $G$ such that $d_{r,p}^{(G)} < \epsilon_{r,p}$ for a tolerance level $\epsilon_{r,p} > 0$. Denote,
+\begin{align*}
+    \mathbf{r}^{(et)} \equiv \mathbf{r}^{(G)} \text{ and } \mathbf{p}^{(et)} \equiv \mathbf{p}^{(G)}
+\end{align*}
+
+\noindent $\mathbf{(O_2^t)}$ Compute amenities the implied by equilibrium prices from inner loop,
+\begin{align*}
+    \mathbf{a}_{js}^{(et)} = \frac{1}{F_{js} \sigma_s} \Bigg( \sum_{k=1}^K \mathcal{Q}_j^{D,L,k}(\mathbf{r}^{(et)},\mathbf{a}^{(t)}) \alpha_{s}^k \alpha_c^k w^k +  \mathcal{Q}_j^{T}(\mathbf{p}^{(et)},\mathbf{a}^{(t)}) \alpha_{s}^T \alpha_c^T w^T  \Bigg)
+\end{align*}
+
+\noindent $\mathbf{(O_3^t)}$ Update amenities,     $\mathbf{a}^{(t+1)} = (1-\lambda) \mathbf{a}^{(et)} + \lambda \mathbf{a}^{(t)}$
+
+\noindent $\mathbf{(O_4^t)}$ Compute $d_a^{(t)} = ||\mathbf{a}^{(t+1)} - \mathbf{a}^{(t)}||_{\infty}$
+
+\noindent Iterate until step $T$ such that $d_a^{(T)} < \epsilon_a$ for a tolerance level $\epsilon_a > 0$.
+
+
+\Paragraph{Algorithm settings.}\label{sec:appendix model fit assumptions}
+We construct the amenity supply equation using the estimates from section \ref{sec: amenity_supply estimation}. We set the unobservable component of entry costs equal to the residuals of equation \eqref{eq:amenities_regression}. For housing demand, we take the estimates from section \ref{sec:demand_estimation}, fix the exogenous characteristics of demand at their 2017 level, set unobservable demand shocks $\xi^k_{j}$ equal to zero (their conditional mean), and sum across groups $k$ to compute aggregate demand for long-term housing. We calibrate the differential costs of short- versus long-term rentals to match the number of STR tourists in each location in 2017. Finally, we start our solver at the observed prices and amenities in 2017. We define convergence when the infinite norm of the excess demand function for the vector of prices and amenities $(\mathbf{r},\mathbf{p},\mathbf{a})$ is less than 1E-10.
+
+\subsubsection{Local uniqueness of equilibrium}\label{sec:uniqueness} To evaluate the extent of multiplicity, we experiment by perturbing the initial values supplied to the equilibrium solver described in section \ref{sec: equilibrium_solver}. 
+
+Note that given an amenities matrix $\mathbf{a}$, the equilibrium rent vector $\mathbf{r}$ is unique. Therefore, for our exercise it suffices to vary the initial values of $\mathbf{a}$. For the perturbation, we first fix the prices to those in the data, $(\mathbf{r^0},  \mathbf{p^0})= (\mathbf{r}^{Observed},\mathbf{p}^{Observed}).$ Next, we draw an initial amenities matrix $\textbf{a}^0$ from a neighborhood around observed amenities, $\textbf{a}^{Observed}$, as follows: $\textbf{a}^0 = \textbf{a}^{Observed} + \textbf{a}^{Observed}\cdot\epsilon,$ where we randomly sample a matrix $\epsilon$ from a ring with inner radius $\rho$ and outer radius $\rho + 0.01$, for $\rho = 0, 0.01, \hdots, 0.04$. For each ring, we draw 10 different starting values.  Figure \ref{fig: amenities perturbations - plots - deviation proportions} shows that for any perturbation below $\epsilon=0.04$ we obtain the same equilibrium. We take this as evidence that at least locally, the equilibrium is unique. 
+
+\begin{figure}[H]
+    \caption{Equilibrium deviations under a range of perturbations.}\label{fig: amenities perturbations - plots - deviation proportions}
+    \centering
+    \begin{minipage}{0.34\textwidth}
+    \caption*{\small {Rental Prices}}
+        \includegraphics[width=0.9\textwidth]{output/figures/eq_rent_stability_median.png }
+    \end{minipage}%
+    \begin{minipage}{0.34\textwidth}
+         \caption*{\small {STR prices}}
+        \includegraphics[width=0.9\textwidth]{output/figures/eq_airbnb_stability_median.png}
+    \end{minipage}%
+    \begin{minipage}{0.34\textwidth}
+    \caption*{\small {Amenities}}
+        \includegraphics[width=0.9\textwidth]{output/figures/eq_amenity_stability_median.png}
+    \end{minipage}
+    \begin{minipage}{\textwidth}{\scriptsize Notes: The horizontal axes indicate perturbations (ranging from 0\% to 10\%) of the equilibrium solver's starting point. The vertical axes indicate how the equilibrium that results from the perturbed starting point deviates from the baseline unperturbed equilibrium (in percentage points). Deviations are measured as the mean percentage point gap in equilibrium outcomes across samples (where for each sample we take the median gap in rent, amenities, and STR prices). Values of zero on the vertical axes indicate the perturbation of the starting point leads to the same initial equilibrium. Positive values indicate convergence to a different equilibrium, with higher values indicating further distance from the initial equilibrium.}
+    \end{minipage}
+\end{figure}
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Welfare accounting details}\label{sec:appendix_measuring_welfare}
+
+\subsubsection{Consumer surplus of renters}
+\label{sec:consumer_surplus_residents}
+Following \cite{train}, we define consumer surplus as a function of $EV^k_{j, \tau}$ when evaluated at vector $(\mathbf{r}, \mathbf{a})$. The expected consumer surplus for a type-$k$ resident is a function of their marginal utility of income $\upsilon_k$ and their choice over locations $j'$:
+\begin{align*}    
+    \mathbb{E}\big[CS^k_{j, \tau}(\mathbf{r}, \mathbf{a})\big] = \frac{1}{\upsilon_k} \mathbb{E}^{k}\left[\max_{j'} \left({V^k_{j', j, \tau}}(\mathbf{r}, \mathbf{a}) + \epsilon_{j'}\right)\right] = \frac{1}{\upsilon_k} EV^k_{j, \tau}(\mathbf{r}, \mathbf{a}) + C_k,
+\end{align*}
+for some constant $C_k$. Integrating over the stationary distribution of households over locations, we obtain the following expression for consumer surplus:
+\begin{align*}
+    CS^k(\mathbf{r},\mathbf{a}) \equiv \frac{1}{\upsilon_k} \sum_{j,\tau} EV^k_{j,\tau} (\mathbf{r},\mathbf{a}) \pi_{j,\tau}^k(\mathbf{r},\mathbf{a}) + C_k.
+\end{align*}
+Following Section \ref{sec: appendix microfoundation-flow utility}, the expected value function for group $k$ is,
+\begin{align*}
+    EV^k_{j, \tau}(\mathbf{r}, \mathbf{a}) = \frac{1}{1-\beta}\frac{1}{\sigma^k}\log w^k + f(\mathbf{r}, \mathbf{a}),
+\end{align*}
+for some function $f$ and $w^k$ is income of group $k$. Moreover, we can estimate $\sigma^k = -\frac{1-\phi^k}{\delta_r^k}$ where $\delta^k_r$ is the price coefficient and $\phi^k$ is the housing expenditure share of group $k$. Hence, the marginal utility of income for group $k$ can be estimated as:
+\begin{align}\label{equation: alternative marginal utility}
+    \upsilon^k = -\frac{1}{1-\beta}\frac{\delta^k_r}{1-\phi^k }\frac{1}{w^k}.
+\end{align}
+We treat Younger Families as renters, computing their surplus as specified above.
+
+\subsubsection{Consumer surplus of home-owners}\label{sec: incorporating rental income}
+
+Some of our household types (Older Families and Singles) are home-owners (i.e., owner-occupiers), whom we assume rent to themselves and receive back rental income. To compute how much rental income, we take a location's average rental income (based on $r_j$, the long-term rental price per square meter, and $size_j$, the average size of a housing unit) and weight it by the type-$k$ home-owner population,
+\begin{align}\label{eq:rental_income}
+\bar{i}^{L,k}(\mathbf{r},\mathbf{a})\equiv\sum_j \frac{\mathcal{Q}^{D,L,k}_j(\mathbf{r}, \mathbf{a})}{\sum_j \mathcal{Q}^{D,L,k}_j(\mathbf{r}, \mathbf{a})}\cdot r_j\cdot size_j. 
+\end{align} 
+Consumer surplus of home-owners is the sum of i) their consumer surplus as renters, defined in section \ref{sec:consumer_surplus_residents}, and ii) their rental income $\bar{i}^{L,k}(\mathbf{r},\mathbf{a})$,
+\begin{align*}
+    CS^k(\mathbf{r},\mathbf{a}) \equiv \frac{1}{\upsilon_k} \sum_{j,\tau} EV^k_{j,\tau} (\mathbf{r},\mathbf{a}) \pi_{j,\tau}^k(\mathbf{r},\mathbf{a}) + \bar{i}^{L,k}(\mathbf{r},\mathbf{a})+ C_k.
+\end{align*}
+
+\subsubsection{Consumer surplus of tourists}\label{sec:consumer_surplus_tourists}
+Following \cite{train}, the consumer surplus of tourists is given by:
+\[ \frac{1}{\upsilon^T}\log \Big( \sum_j \exp(u^T_j(\mathbf{p},\mathbf{a})\Big) + C_T,\]
+where $u^T_j(\mathbf{p},\mathbf{a})=\delta_{j}^{S} + \delta^{S}  + \delta_{p}^{S} \log p_{{j}} + \delta_{a}^{S} \log a_{j} + \xi_{{j}}^{S},$ and $\upsilon^T= \sum_j \Prob_j^T(\mathbf{p},\mathbf{a})\cdot \frac{\delta^S_p }{p_j}.$
+
+\subsubsection{Absentee landlords.} The city-wide average surplus for absentee landlords is,
+\begin{align*}
+   \sum_j  \frac{H_j^A}{\sum H_j^A} \left[ \frac{1}{\alpha}\log\Big(\exp(\alpha p_j + \kappa_j) + \exp(\alpha r_j) \Big) + C_L \right],
+\end{align*}
+where the term in square brackets is the surplus of the average absentee landlord in location $j$, weighted by the housing stock owned in each location. We do not include the surplus of absentee landlords in the consumer surplus of residents.
+
+
+\subsubsection{Changes in surplus across counterfactuals}\label{sec:consumer_surplus_cf}
+Given two equilibria $(\mathbf{r}_0, \mathbf{a}_0)$ and $(\mathbf{r}_1, \mathbf{a}_1)$, the change in  type $k$ consumer surplus is,
+\begin{align*}
+\Delta \mathbb{E}\big[CS^k\big] &= \mathbb{E}\left[CS^k(\mathbf{r}_1, \mathbf{a}_1)\right] - \mathbb{E}\left[CS^k(\mathbf{r}_0, \mathbf{a}_0)\right],  
+\end{align*}
+where $CS^k$ is defined as in the preceding sections for each household type.
+
+\subsubsection{Segregation measure}\label{sec: appendix def entropy index}
+We use the entropy index \citep{white1986segregation} as our measure of segregation. First, we define the entropy index for a single location. Let $d_{j}^{k}$ be type $k$ share of location $j$ population---if the type $k$ population in location $j$ is $D_{j}^{k}$, then $d_{jk} \equiv D_{j}^{k}/ \sum_{k} D_{j}^{k}$. For location $j$, the entropy index is defined as $\upsilon_j \equiv - \sum_{k=1}^K d_{j}^{k} \log(d_{j}^{k})$. Next, we define $\upsilon$ as the entropy index for the whole city. To do so, we define: $D_j \equiv \sum_{k=1}^K D_{j}^{k}$, $D^{k} \equiv \sum_{j=1}^J D_{j}^{k}$, and $D \equiv \sum_{j=1}^J \sum_{k=1}^K D_{j}^{k}$, as well as,
+\begin{align*}
+    \widehat{\upsilon} \equiv - \sum_{k=1}^K \frac{D^{k}}{D} \log \Big( \frac{D^{k}}{D} \Big) && \text{and} && \overline{\upsilon} \equiv \sum_{j=1}^J \upsilon_j \frac{D_j}{D} && \implies \upsilon \equiv \frac{\widehat{\upsilon} - \overline{\upsilon}}{\widehat{\upsilon}}.
+\end{align*}
+Note $\upsilon \in [0,1]$ and higher $\upsilon$ means more segregation: $\upsilon$ equals 0 if the share of each type in each location is equal to its population share in the whole population, and $\upsilon$ equals 1 if each location is occupied by exactly one type. 
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Estimation details}
+
+\subsubsection{Classification by k-means clustering}\label{sec: appendix clustering} 
+
+First, given the high persistence in tenancy status, we classify households into three groups based on their modal tenancy status: homeowners, private renters, and renters in social housing. Second, we construct an invariant vector of demographics as follows.  For time-varying data---age, disposable income (gross income net of tax), disposable income per person, presence of children---we take averages across years. We standardize all characteristics---skill, region of origin, age, disposable income, disposable income per person, children---because k-means is not invariant to scale and mechanically puts more weight on variables that have larger absolute values. We assign the categorical variables weights of $1/\sqrt{C-1}$, where the number of categories is $C$, so that each dimension has a weight of 1.\footnote{That is, for skill, we retain two categories, one that belongs to low skill and one to medium skill. We divide the standardize dummies by $\frac{1}{\sqrt{2}}$. Four country of origin, we set Dutch as the baseline category and divide standardize dummies by $\frac{1}{\sqrt{3}}$.} We finally run k-means on the transformed vector of demographics.
+
+To choose the number of groups, we use a cross-validation method using two heuristics: the elbow method and the Calinski-Harabasz index. The optimal number of clusters as suggested by the elbow method is pinned down by the largest change of slope in the sum of squared errors curve. The Calinski-Harabasz index suggests that the optimal number of clusters is achieved when the ratio of the sum of between-clusters dispersion and of inter-cluster dispersion is maximized. Figure \ref{fig:heuristics} shows the results of these heuristics for the three tenancy groups. For homeowners and private renters both methods suggest an optimal number of two clusters. For social housing renters, the first method suggests two clusters and the second method either two or six clusters. Putting both results together, we choose two as the final number of groups for social housing renters.
+% Done using graph_heuristics.do
+\begin{figure}[H]
+    \centering
+    \caption{Heuristics for k-means classification}\label{fig:heuristics}
+    \includegraphics[scale = 0.6]{output/figures/stylized_facts/elbow_all.pdf}%
+    \includegraphics[scale = 0.6]{output/figures/stylized_facts/CH_all.pdf}
+\end{figure}
+
+\vspace{-0.45cm}
+\subsubsection{Discretization of a continuous state variable}\label{sec: appendix discretization of loc capital}
+
+We closely follow \cite{rust1987optimal}. To keep the number of states low, we discretize location tenure in two buckets: $\bar{\tau}=1$ if  $\tau \le 3$ and $\bar{\tau} =2$ otherwise. We assume that location tenure evolves using transition probabilities $\Prob_t(x_{t+1}'|j_t,x_t)$. In practice, we assume $\Prob_t(\tau_t = 1|j_t,x_t) = 1$ if $j_t \neq j_{t-1}$ and,
+\begin{equation*}
+    \Prob_t(\tau_t = 2|j_t, x_t) = \begin{cases}
+    1 & , \text{if } j_t = j_{t-1} \text{ and } \tau_{t-1} = 2 \\
+    p & , \text{if } j_t = j_{t-1} \text{ and } \tau_{t-1} = 1, \\
+    \end{cases}
+\end{equation*}
+where $p$ is estimated using a frequency-based estimator.
+
+\subsubsection{Constructing the Expected Value Function}\label{sec: appendix ECCP methodology}
+The value function is defined as follows:
+\begin{equation*}
+    V_t(x,\epsilon) = \max_{j} \Bigg \{ \E_{x'|j,x} \Big[ u_t(x',x) \Big] + \epsilon_{j} + \beta \E_t \Big[ V_{t+1}(x',\epsilon') | j,x, \epsilon \Big] \Bigg\}. 
+\end{equation*}
+Under the assumptions in Section \ref{sec:demand_estimation_locals}, we define the ex-ante value function as,
+ \begin{align}\label{eq: define EV function}
+\E_t\big[V_{t+1}(x',\epsilon')|j,x,\epsilon\big] &= \int V_{t+1}(x',\epsilon') dF_t(x',\omega_{t+1},\epsilon'|j,x,\epsilon) \\
+    &=\int \Big(\int V_{t+1}(x',\epsilon')dF(\epsilon')\Big)dF_t(x',\omega_{t+1}|j,x)\\
+     &=\int {V}_{t+1}(x')dF_t(x',\omega_{t+1}|j,x) \equiv EV_t(j,x).
+     \end{align}
+We next define the conditional value function:
+\[ v_t(j,x) = \sum_{x'} \Prob_t(x'|j,x)\big(u_t(x',x)+\beta\bar{V}_{t}(x')\big) \equiv \bar{u}_t(j,x) +\beta EV_t(j,x).\]
+If idiosyncratic shocks are distributed i.i.d. Type I EV, then:
+\begin{align}
+   \Prob_t(j|x)=\frac{\exp(v_t(j,x))}{\sum_{j'}\exp(v_t(j',x))}, \spaceand   {V}_t(x)&=\log\Bigg(\sum_j\exp v_t(j,x)\Bigg) + \gamma,\label{CCP}
+\end{align} 
+where $\gamma$ is Euler's constant. Combining the two previous equations,
+\begin{align}
+    {V}_t(x)&=v_t(j,x)-\ln(\Prob_t(j|x))+\gamma.\label{AM-inversion}
+\end{align}
+A key observation is that equation \eqref{AM-inversion} holds for any state $x$, and any action $j$.
+
+\Paragraph{Toward a demand regression equation.} 
+Our demand regression equation's starting point follows \cite{hotz1993conditional}, by taking differences on equation \eqref{CCP}:
+\begin{align}
+    \ln \Big( \frac{\Prob_t(j|x_{t})}{\Prob_t(j'|x_{t})}\Big)= v_t(j,x_{t})-v_t(j',x_{t}). 
+\end{align} 
+Substituting for the choice specific value function,
+\begin{align}
+    \ln \Big( \frac{\Prob_t(j|x_{t})}{\Prob_t(j'|x_{t})}\Big) &= \bar{u}_t(j,x_{t})- \bar{u}_t(j',x_{t})+\beta\big(EV_t(j,x_{t})-EV_t(j',x_{t})\big) . \label{euler_equation}
+\end{align}  
+Following \cite{scott2013dynamic} and \cite{kalouptsidi2021linear}, the realized expected value ${V}_t(x')$ can be decomposed between its expectation at time $t$ and its expectational error, where uncertainty is on the aggregate state $\omega_{t+1}$: $  {V}_{t+1}(x') = \bar{V}_{t}(x') + \nu_{t}(x').$ Plugging in everything in equation \eqref{euler_equation} and using \ref{AM-inversion} to replace the continuation values ${V}_{t+1}$ gives us,
+\begin{align*}
+ \ln \Big( \frac{\Prob_t(j|x_{t})}{\Prob_t(j'|x_{t})}\Big)=&\sum_{x} \Prob(x|j,x_{t})u_t(x,x_t)- \sum_{x'} \Prob(x'|j',x_{t})u_t(x',x_t)\nonumber \\
++&\beta\Bigg[\sum_{x} \Prob(x|j,x_{t}) \bar{V}_{t}(x) -\sum_{x'} \Prob(x'|j',x_{t}) \bar{V}_{t}(x')\Bigg] \\
+=&\sum_{x} \Prob(x|j,x_{t})u_t(x,x_t)- \sum_{x'} \Prob(x'|j',x_{t})u_t(x',x_t)\nonumber \\
++&\beta\Bigg[\sum_{x} \Prob(x|j,x_{t}) \big({V}_{t+1}(x) -\nu_{t+1}(x)\big)  -\sum_{x'} \Prob(x'|j',x_{t}) \big({V}_{t+1}(x') -\nu_{t+1}(x')\big) \Bigg] \\
+=&\sum_{x} \Prob(x|j,x_{t})u_t(x,x_t)- \sum_{x'} \Prob(x'|j',x_{t})u_t(x',x_t)\nonumber \\
+-&\beta\Bigg[\sum_{x} \Prob(x|j,x_{t}) \big(v_{t+1}(\tilde{j},x) - \ln \Prob_{t+1}(\tilde{j}|x) -\nu_{t+1}(x)\big) \\
+-&\sum_{x'} \Prob(x'|j',x_{t}) \big(v_{t+1}(\tilde{j},x') - \ln \Prob_{t+1}(\tilde{j}|x') -\nu_{t+1}(x')\big) \Bigg]  \\
+=&\sum_{x} \Prob(x|j,x_{t})u_t(x,x_t)- \sum_{x'} \Prob(x'|j',x_{t})u_t(x',x_t)\nonumber \\
+-&\beta\Bigg[\sum_{x} \Prob(x|j,x_{t}) \big(v_{t+1}(\tilde{j},x) - \ln \Prob_{t+1}(\tilde{j}|x)) \\
+-&\sum_{x'} \Prob(x'|j',x_{t}) \big(v_{t+1}(\tilde{j},x') - \ln \Prob_{t+1}(\tilde{j}|x')) \Bigg]+ \tilde{v}_{j,j',x_{t}},
+\end{align*} 
+where $\tilde{v}_{j,j',x_{t}} \equiv \beta\Big(\sum_{x} \Prob(x|j,x_{t})\nu_{t+1}(x)- \sum_{x'} \Prob(x'|j',x_{t})\nu_{t+1}(x')\Big)$ is a sum of expectational errors. Observe that if $\tilde{j}$ is a renewal action then:
+\[v_{t+1}(\tilde{j},x) = \bar{u}_{t+1}(\tilde{j},x)+ EV_t(\tilde{j}, 1) = u_{{\tilde{j},x},t+1} + \delta_{\tau}\cdot 1 + MC(\tilde{j},j) + EV_t(\tilde{j}, 1)
+\]
+for all $x = (j,\tau)$, regardless of $\tau$, where we decompose the per-period utility function, $\bar{u}_{t+1}(\tilde{j},x)$, into a location specific component, $u_{{\tilde{j}},x_{t+1}}$, a location-tenure component $\delta_{\tau} $, and a moving cost component $MC(\tilde{j},j)$. Substituting and re-arranging,
+\begin{align*}
+&\ln \Big( \frac{\Prob_t(j|x_{t})}{\Prob_t(j'|x_{t})}\Big)+ \beta\Bigg[\sum_{x} \Prob(x|j,x_{t}) \ln \Prob_{t+1}(\tilde{j}|x) -\sum_{x'} \Prob(x'|j',x_{t}) \ln \Prob_{t+1}(\tilde{j}|x')\Bigg] \\
+&=u_{j,x_t}-u_{j',x_t}+\delta_\tau\Big(\sum_{x} \Prob(x|j,x_{t})\tau(x)- \sum_{x'} \Prob(x'|j',x_{t})\tau(x')\Big)\\
+&+ MC(j,j_{t-1})- MC(j',j_{t-1})+\beta\Big( MC(\tilde{j},j)- MC(\tilde{j},j')\Big) +\tilde{v}_{j,j',x_{t}}. 
+\end{align*} 
+
+\subsubsection{First-stage estimation of Conditional Choice Probabilities.}\label{sec: first stage PPML}
+We follow a similar procedure as in \cite{traiberman2019occupations} and \cite{humlum2021robot}. We depart from their approaches that use a linear probability model and use a multinomial logit on individual decisions to predict choice probabilities for several reasons. First, we can use individual variation. Second, our data reveal that the likelihood of not moving is approximately 85\%, while the probability of moving to any other location remains close to zero. This bimodal nature of empirical distribution of choice probabilities suggests that an exponential relationship should be better suited to fit individual decisions compared to a linear model. Third, we find that many predicted probabilities of the linear model lie below zero or above one, a feature that requires an ad-hoc extra censoring step. For every individual $i$, we observe her individual state at time $t$ $x_{it} = (j_{t-1}, \tau_{t-1})$, where $j_{t-1}$ is the previous location, $\tau_{t-1}$  and type $k(i)$, as well as the moving decision variables for all $j$: $j_{it} = \mathbbm{1}\{ d(i)_t = j\}$. We define a base outcome $0$, and estimate the following multinomial logit model for each group $k$:
+\[ \Prob(j_{it} = j) = \frac{\exp(\lambda_{j,t}^k + \alpha_{j,1}^k\tau_{t-1} + \alpha_{j,2}^k\tau_{t-1}^2)}{1+ \sum_{j'=1}^J \exp(\lambda_{j',t}^k + \alpha_{j',1}^k\tau_{t-1} + \alpha_{j',2}^k\tau_{t-1}^2}.\]
+
+\Paragraph{Monte Carlo simulations.} Through a Monte Carlo exercise, we compare the bias in second-stage estimates when first-stage probabilities are predicted with a multinomial logit or with a standard frequency estimator. For our Monte Carlo exercise, we define the period flow utility function as:
+\begin{equation*}
+    u_{t}((d,\tau),x_t) =  \alpha \log(r_{dt}) + \sum_s   \beta_s \log N_{dst}
+    + \xi_{dt} + \eta_t + \lambda_d + MC(d,j_{t-1}) + \delta_{\tau} \tau,
+\end{equation*}
+with table \ref{tab: MC params} showing the data generating process of each of the utility components. We also assume that agents have rational expectations. We compute the EV function for each time period as follows. Starting in the last period $T$, we assume that the economy is in steady-state. We define $EV_T$ as:
+\begin{equation}
+    EV_T(j_T,\tau_T) = \log \Bigg( \sum_d \exp \Big( \sum_{x'} \Prob_T(x'|d,x_T) \big[ u_T(x',x_T) + \beta EV_{T}(d,x_T) \big] \Big) \Bigg)
+\end{equation}
+For $t=1,\dots,T-1$, we compute $EV_t$ using backward substitution as follows:
+\begin{equation}
+    EV_t(j_t,\tau_t) = \log \Big( \sum_{d} \exp \big( \sum_{\tau'} \Prob_{t+1}(x'|d,x_t) \big[ u_{t+1}(d,x_t) + \beta EV_{t+1}(d,x') \big] \big) \Big)
+\end{equation}
+
+Assuming a uniform initial distribution of individuals across states, we simulate each individual forward for 10 time periods. We simulate 10 different samples. We take population sizes of 50 thousand---which roughly corresponds to the size of our groups---and 1 million--- which provides insights about convergence properties of large samples. We test two first-stage estimates of conditional choice probabilities: (i) using a multi-nomial logit model and (ii)observed frequencies where we replace zero shares with a small $\epsilon = 10^{-5}$. 
+
+\begin{table}[H]
+\caption{Parameters used in simulations}
+\label{tab: MC params}
+\centering
+\scalebox{0.9}{
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{llllll}
+\hline
+\multicolumn{2}{c}{Variables}                                                  &  &  & \multicolumn{2}{c}{Parameters} \\  \cline{1-2} \cline{5-6} 
+Name                              & Distribution (i.i.d.) / Value              &  &  & Name            & Value        \\ \hline \hline
+$u$                               & $N(0,0.05)$                                &  &  & $\alpha$                          & - 0.05                        \\
+$v$                               & $N(0,0.05)$                                &  &  & $\beta_1, \beta_2$                         & 0.1                         \\
+$\xi$                             & $u+v$                                      &  &  & $\gamma_0,\gamma_1$                         & -0.0025                        \\
+$b_{\text{exo}}$                  & $LogN(0.5,0.1)$                            &  &  & $\gamma_2$                          & -0.5                     \\
+$r$                             & $0.75 \cdot b_{\text{exo}} + 0.25 \cdot v$ &  &  & $\delta$                          & 0.1                         \\
+$a_{\text{exo}}$                  & $LogN(1.5,0.5)$                            &  &  & $N_{\text{households}}$           & $\in [5 \cdot 10^5,10^6]$    \\
+$a$                               & $0.75 \cdot a_{\text{exo}}+0.25 \cdot v$   &  &  & $J$                               & 24                         \\
+$\text{dist}(j,j'), j,j' \neq 0; \rho_d$ & $LogN(1,0.5)$                              &  &  & $S$                               & 2                         \\
+$\lambda_j$                       & $N(0,0.1)$         &  &  & $\Bar{\tau}$                      & 2                       \\
+$\lambda_t$ (Perfect foresight)                       & $N(0,0.1)$                                 &  &  & $T$                               & 10  \\
+  $\lambda_t$ (Rational expectations)                       & 0                              &  &  &  tol in EV iteration & $10^{-10}$                    \\
+\hline \hline
+\end{tabular}}
+}
+\end{table}
+
+\conditionalinput{code/2_estimation/monte_carlo_first_stage/Output/table_FEstrue_locdummytrue_divfalse_vertical.tex}
+
+The results are presented in Table \ref{tab: MCs FEs loc dummy not normalized} and reveal that first-stage choice probabilities using a multi-nomial logit model yield a strictly dominant finite sample performance. The gap is most pronounced in small samples where the likelihood of observing zero flows between states in the data is higher, where the frequency-based estimator uses small but arbitrary values imputed by the researcher, which can be far from the true transition probabilities. The multi-nomial logit approximates the true probabilities well, reducing finite-sample bias in the final estimation stage. As we increase the sample size, the number of observed zero flows diminishes, and we observe convergence of both estimators to the performance of the first-best estimator using the true transition probabilities.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Robustness exercises}
+
+\subsubsection{Robustness of real estate supply elasticity}\label{sec:appendix robustness eta}
+
+We test how different choices of supply elasticities and their implied congestion parameter $\eta$ affect our main takeaways. First, Table \ref{tab: eta_robustness} shows that choosing a supply elasticity equal to San Francisco, as estimated by \cite{saiz2010geographic}, delivers the best model fit in terms of matching the observed distribution of rental prices.
+
+\begin{table}[H]
+\centering
+\footnotesize
+\caption{Rent fit across a range of supply elasticities}\label{tab: eta_robustness}
+\scalebox{0.9}{
+\begin{tabular}{@{\extracolsep{10pt}}lcccc} 
+\toprule
+ & \multicolumn{2}{c}{Parameters} & \multicolumn{2}{c}{Rent fit}  \\
+  \cmidrule{2-3} \cmidrule{4-5}   \\[-1ex]
+ \begin{tabular}[c]{@{}c@{}}City\end{tabular}   
+ & \begin{tabular}[c]{@{}c@{}}Supply Elasticity\end{tabular}       
+ & \begin{tabular}[c]{@{}c@{}} $\eta$\end{tabular}          
+ &  \begin{tabular}[c]{@{}c@{}} $R^2$\end{tabular}    
+ & \begin{tabular}[c]{@{}c@{}}$\beta$ \end{tabular}  \\[1ex]
+   \cmidrule{1-3} \cmidrule{4-5}    \\[-1ex]
+San Franciso & 0.66& 1.52    & 0.578 & 1.229  \\ [1ex]
+New York & 0.75 & 1.33 & 0.571 & 1.229   \\ [1ex] 
+Boston &0.86 & 1.16 & 0.566& 1.229  \\ [1ex]
+Portland &1.04 & 0.93 & 0.557	& 1.231\\ [1ex]
+Detroit & 1.24  & 0.81 & 0.549 & 1.234 \\ [1ex]
+Washington DC & 1.61  & 0.62 &  0.524&	1.252  \\ [1ex]
+Durham-Raleigh-Chapel Hill &2.11 & 0.47& 0.476& 1.291\\ [1ex]
+Atlanta & 2.55 & 0.39 & 0.473 &	1.288\\ [1ex]
+ \hline
+\bottomrule
+\end{tabular}}
+\begin{minipage}{\textwidth}{\scriptsize Notes: Table presents the R-square and slope of observed rents against our model equilibrium rents. Supply elasticities are from \cite{saiz2010geographic} and inverted to obtain our amenity congestion parameter $\eta$.}
+\end{minipage}
+\end{table}  
+
+ Second, Figure \ref{fig: robustness - eta - cf} shows the key takeaways from our main counterfactuals in sections \ref{sec: counterfactuals - heterogeneity}-\ref{sec: counterfactuals - str entry} are robust to different supply elasticities, ranging from our baseline inelastic San Francisco case ($\eta$=1.52) to the highly elastic case of Atlanta ($\eta$=0.39). Figure \ref{fig: robustness - eta - cf} confirms that for the full range of $\eta$, the qualitative insight that preference heterogeneity can lead to more sorting but lower inequality is robust. It also confirms the qualitative insight that all households lose from STR entry due to higher rent, but some are partially compensated by amenity changes depending on how they value the amenities linked to tourism, is robust. In all cases, losses of older families are amplified by endogenous amenities, while those of other groups are compensated. Hence, the choice of $\eta$ does not make a major difference for the mechanisms in our model, which instead depend on the correlation between preferences over amenities and amenity supply response across household types.
+
+
+\begin{figure}[H]
+\centering
+\caption{Robustness of heterogeneity and STR-entry counterfactuals to $\eta$.}\label{fig: robustness - eta - cf}
+\centering
+\caption*{$\eta$ = 1.52 (San Francisco baseline)}
+\begin{minipage}{0.45\textwidth}
+    \centering
+    \includegraphics[width=1\linewidth]{output/figures/counterfactual_heterogeneity/bar_sorting_inequality_endo.pdf}%
+\end{minipage}%
+\begin{minipage}{0.225\textwidth}
+    \centering
+    \includegraphics[width=1\linewidth]{output/figures/counterfactual_airbnb_entry/bar_welfare_effects_combined.pdf}%
+\end{minipage}%
+\begin{minipage}{0.225\textwidth}
+    \centering
+    \includegraphics[width=1\linewidth]{output/figures/counterfactual_airbnb_entry/scatter_pref_exposure_a.pdf}%
+\end{minipage}%
+
+\caption*{$\eta$ = 0.93 (Portland)}
+\begin{minipage}{0.45\textwidth}
+    \centering
+    \includegraphics[width=1\linewidth]{output/figures/robustness_eta/B_093/counterfactual_heterogeneity/bar_sorting_inequality_endo.pdf}%
+\end{minipage}%
+\begin{minipage}{0.225\textwidth}
+    \centering
+    \includegraphics[width=1\linewidth]{output/figures/robustness_eta/B_093/counterfactual_airbnb_entry/bar_welfare_effects_combined.pdf}%
+\end{minipage}%
+\begin{minipage}{0.225\textwidth}
+    \centering
+    \includegraphics[width=1\linewidth]{output/figures/robustness_eta/B_093/counterfactual_airbnb_entry/scatter_pref_exposure_a.pdf}%
+\end{minipage}%
+
+\caption*{$\eta$ = 0.39 (Atlanta)}
+\begin{minipage}{0.45\textwidth}
+    \centering
+    \includegraphics[width=1\linewidth]{output/figures/robustness_eta/B_039/counterfactual_heterogeneity/bar_sorting_inequality_endo.pdf}%
+\end{minipage}%
+\begin{minipage}{0.225\textwidth}
+    \centering
+    \includegraphics[width=1\linewidth]{output/figures/robustness_eta/B_039/counterfactual_airbnb_entry/bar_welfare_effects_combined.pdf}%
+\end{minipage}%
+\begin{minipage}{0.225\textwidth}
+    \centering
+    \includegraphics[width=1\linewidth]{output/figures/robustness_eta/B_039/counterfactual_airbnb_entry/scatter_pref_exposure_a.pdf}%
+\end{minipage}%
+\end{figure}
+
+
+
+\subsubsection{Robustness of amenity supply estimates to precinct-year fixed effects}\label{sec: amenity supply robustness}
+
+We present estimation results for a version of equation \eqref{eq:amenities_regression} from the main text that allows for precinct-year fixed effects:
+\begin{align}
+\log N_{sjt} = \lambda_j + \lambda_{p(j)t} - \eta \log N_{jt}+\log \Big( \sum_k \beta_{s}^k X_{jt}^k \Big) + \omega_{sjt},\label{eq:amenities_regression_robustness}
+\end{align}
+where $p(j)$ indicates the precinct where district $j$ is located. Following the same procedure as in Section \ref{sec: amenity_supply estimation}, estimation results are presented in Table \ref{tab:amenity_supply_estimation_robustness}.
+
+We can test if the difference between the coefficients in Table \ref{tab:amenity_supply_estimation_robustness} above and \ref{tab:amenity_supply_estimation} in the main draft, respectively, are statistically indistinguishable. To do so, we can simply check whether confidence intervals overlap. It is easy to check that for the 95\% confidence intervals reported in the tables, we can only reject that one coefficient is statistically different across the two specifications, namely, the coefficient for Tourists on Restaurants.\footnote{We reject all statistical differences at the 99\% level. We fail to reject four equalities at the 90\% level.} Moreover, to formally test for the difference between the two models, we conduct a joint multiple hypothesis test. The $F$ statistic in that case is given by 0.8197, which is below 1.331---the critical value of an F distribution with 59 and 1319 degrees of freedom at the 5\% level. Therefore, we conclude that the two models are not statistically different.
+
+\conditionalinput{output/tables/table_output_amenity_supply_robustness_gamma_1.52.tex}
+
+\subsubsection{Comparison of static and dynamic model estimates}\label{sec:appendix static model}
+
+We show how our demand estimates change in the static version of our model: we remove forward-looking behavior (by setting $\beta=0$) and location capital, i,.e., the dynamic state-dependent component of moving costs. We keep the bilateral moving costs since they are a static component of moving costs and are common in static models of migration \citep{bryan2019aggregate}. 
+
+\conditionalinput{output/tables/ivreg_demand_location_choice_estimates_static.tex}
+
+Table \ref{tab: demand_estimation_locals-static} shows the demand estimates in the static model. Table \ref{tab: demand_estimation_locals-static v dynamic} compares the static estimates to our baseline dynamic estimates by performing a t-test of differences for the willingness to pay for amenities---the amenity preference parameters normalized by the rent coefficient. Most of the coefficients are significantly different across specifications, and in several cases even change  sign. We take these differences as evidence that failing to account for dynamic considerations can severely bias preference coefficients, in line with the findings of similar studies \citep{bayer2016dynamic}.
+
+\conditionalinput{output/tables/wtp_dynamic_vs_static.tex}
+
+\end{document}
+
+
+
+
+

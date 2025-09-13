@@ -1,0 +1,15 @@
+pathlib
+numpy
+pandas
+jaxlib==0.4.20
+jax[cpu]==0.4.20
+jaxopt
+openpyxl
+tqdm
+optax
+scipy
+matplotlib
+tensorboardX
+scikit-learn
+scipy==1.12.0
+seaborn

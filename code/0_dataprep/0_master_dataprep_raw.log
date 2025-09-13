@@ -1,0 +1,3834 @@
+-------------------------------------------------------------------------------
+      name:  <unnamed>
+       log:  /Users/junbiao/PhD/Almagro2025_replication/code/0_dataprep/0_maste
+> r_dataprep_raw.log
+  log type:  text
+ opened on:   8 Sep 2025, 20:52:07
+
+. 
+. * Get the current directory
+. local current_dir = c(pwd)
+
+. 
+. * Go one level up by finding the position of the last '/'
+. local last_slash_pos = strrpos("`current_dir'", "/")
+
+. local parent_dir = substr("`current_dir'", 1, `last_slash_pos' - 1)
+
+. di "`parent_dir'"
+/Users/junbiao/PhD/Almagro2025_replication/code
+
+. 
+. * Go two levels up by finding the position of the last '/' in the parent dire
+> ctory
+. local last_slash_pos_parent = strrpos("`parent_dir'", "/")
+
+. local grandparent_dir = substr("`parent_dir'", 1, `last_slash_pos_parent' - 1
+> )
+
+. 
+. * Set the global variable
+. global DROPBOX_AMENITIES "`grandparent_dir'"
+
+. 
+. display "Global DROPBOX_AMENITIES is set to: $DROPBOX_AMENITIES"
+Global DROPBOX_AMENITIES is set to: /Users/junbiao/PhD/Almagro2025_replication
+
+. 
+. cd "$DROPBOX_AMENITIES/"
+/Users/junbiao/PhD/Almagro2025_replication
+
+. 
+. 
+. cd "$DROPBOX_AMENITIES/code/0_dataprep/subfiles"
+/Users/junbiao/PhD/Almagro2025_replication/code/0_dataprep/subfiles
+
+. do 0_prep_annual_income.do
+
+. * ---------------------------------------------------------------------------
+> ---
+. * Project: Endogenous Amenities and Location Sorting
+. * Purpose: Prepare exported data on income at the group-year level
+. * Author: Milena Almagro
+. * ---------------------------------------------------------------------------
+> ---
+. 
+. 
+. * Read exported data 
+. cd "$DROPBOX_AMENITIES/data"
+/Users/junbiao/PhD/Almagro2025_replication/data
+
+. import excel "cbs/exports/group_characteristics/Group Characteristics - April
+>  2022", sheet("Yearly Income") first clear
+(12 vars, 2,090 obs)
+
+. 
+. * Drop if district is unknown (gb == 0) or missing (gb == .)
+. drop if gb == 0 | gb == .
+(157 observations deleted)
+
+. * Drop undefined groups 
+. drop if combined == .
+(277 observations deleted)
+
+. 
+. * Weighted mean of income across locations with population counts as weights
+. gen aux = num_hh*disposable_income
+
+. bysort year combined : egen total_income = sum(aux)
+
+. bysort year combined: egen total_hh = sum(num_hh)
+
+. gen yearly_income = total_income/total_hh
+
+. 
+. bysort year: egen total_city_income = sum(aux)
+
+. bysort year: egen total_city_hh = sum(num_hh)
+
+. gen yearly_city_income = total_city_income/total_city_hh
+
+. 
+. * Weighted median of income across locations with population counts as weight
+> s
+. bysort year combined (disp): gen cum_num_hh = sum(num_hh)
+
+. bysort year combined (disp): gen ind = (cum_num_hh< total_hh/2)
+
+. bysort year combined (ind disp): gen median_yearly_income = disposable_income
+> [1]
+
+. 
+. * Collapse to yearly observations
+. collapse median_yearly_income yearly_income yearly_city_income, by(year combi
+> ned_cluster)
+
+. rename yearly_income disposable_income
+
+. rename yearly_city_income disposable_city_income
+
+. rename median_yearly_income median_disposable_income
+
+. 
+. * Compute average income at the group-year level
+. bysort combined: egen avg_disposable_income = mean(disposable_income)
+
+. bysort combined: egen avg_median_disposable_income = mean(median_disposable_i
+> ncome)
+
+. 
+. * Add infromation about tourist income from Loon and Rouwendal (2017)
+. * https://link.springer.com/article/10.1007/s10824-017-9293-1
+. set obs `=_N+12'
+Number of observations (_N) was 72, now 84.
+
+. replace combined = 7 if combined == .
+(12 real changes made)
+
+. bysort combined: replace year =  _n +2007 if combined == 7
+(12 real changes made)
+
+. replace disposable_income = 139*365 if combined == 7
+(12 real changes made)
+
+. replace avg_disposable_income = 139*365 if combined == 7
+(12 real changes made)
+
+. replace median_disposable_income = 139*365 if combined == 7
+(12 real changes made)
+
+. replace avg_median_disposable_income = 139*365 if combined == 7
+(12 real changes made)
+
+. replace disposable_city_income = 139*365 if combined == 7
+(12 real changes made)
+
+. 
+. save constructed/annual_income, replace
+file constructed/annual_income.dta saved
+
+. export delimited constructed/annual_income, replace
+file constructed/annual_income.csv saved
+
+. export delimited final/inputs/annual_income, replace
+file final/inputs/annual_income.csv saved
+
+. 
+. 
+. 
+. 
+end of do-file
+
+. cd "$DROPBOX_AMENITIES/code/0_dataprep/subfiles"
+/Users/junbiao/PhD/Almagro2025_replication/code/0_dataprep/subfiles
+
+. do 0_prep_expenditure_shares.do
+
+. * ---------------------------------------------------------------------------
+> ---
+. * Project: Endogenous Amenities and Location Sorting
+. * Purpose: Prepare exported data on expenditure shares at the group-year leve
+> l
+. * Author: Milena Almagro
+. * ---------------------------------------------------------------------------
+> ---
+. 
+. cd "$DROPBOX_AMENITIES/data"
+/Users/junbiao/PhD/Almagro2025_replication/data
+
+. import excel "cbs/exports/expenditure_shares/Expenditure Shares - April 2022"
+> , first clear
+(19 vars, 968 obs)
+
+. 
+. keep year gb combined exp_sh_hh
+
+. 
+. * Add three groups (2 social housing + tourists)
+. forval g = 5/7{
+  2.         forval j = 1/22{
+  3.                 forval y = 2008/2019{
+  4.                         set obs `=_N+1'
+  5.                         replace combined = `g' if combined == .
+  6.                         replace gb = `j' if gb == .
+  7.                         replace year = `y' if year == .
+  8.                 } 
+  9.         }
+ 10. }
+Number of observations (_N) was 968, now 969.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 969, now 970.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 970, now 971.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 971, now 972.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 972, now 973.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 973, now 974.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 974, now 975.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 975, now 976.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 976, now 977.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 977, now 978.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 978, now 979.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 979, now 980.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 980, now 981.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 981, now 982.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 982, now 983.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 983, now 984.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 984, now 985.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 985, now 986.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 986, now 987.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 987, now 988.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 988, now 989.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 989, now 990.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 990, now 991.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 991, now 992.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 992, now 993.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 993, now 994.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 994, now 995.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 995, now 996.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 996, now 997.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 997, now 998.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 998, now 999.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 999, now 1,000.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,000, now 1,001.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,001, now 1,002.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,002, now 1,003.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,003, now 1,004.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,004, now 1,005.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,005, now 1,006.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,006, now 1,007.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,007, now 1,008.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,008, now 1,009.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,009, now 1,010.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,010, now 1,011.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,011, now 1,012.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,012, now 1,013.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,013, now 1,014.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,014, now 1,015.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,015, now 1,016.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,016, now 1,017.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,017, now 1,018.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,018, now 1,019.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,019, now 1,020.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,020, now 1,021.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,021, now 1,022.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,022, now 1,023.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,023, now 1,024.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,024, now 1,025.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,025, now 1,026.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,026, now 1,027.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,027, now 1,028.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,028, now 1,029.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,029, now 1,030.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,030, now 1,031.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,031, now 1,032.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,032, now 1,033.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,033, now 1,034.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,034, now 1,035.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,035, now 1,036.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,036, now 1,037.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,037, now 1,038.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,038, now 1,039.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,039, now 1,040.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,040, now 1,041.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,041, now 1,042.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,042, now 1,043.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,043, now 1,044.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,044, now 1,045.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,045, now 1,046.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,046, now 1,047.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,047, now 1,048.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,048, now 1,049.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,049, now 1,050.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,050, now 1,051.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,051, now 1,052.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,052, now 1,053.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,053, now 1,054.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,054, now 1,055.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,055, now 1,056.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,056, now 1,057.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,057, now 1,058.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,058, now 1,059.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,059, now 1,060.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,060, now 1,061.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,061, now 1,062.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,062, now 1,063.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,063, now 1,064.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,064, now 1,065.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,065, now 1,066.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,066, now 1,067.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,067, now 1,068.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,068, now 1,069.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,069, now 1,070.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,070, now 1,071.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,071, now 1,072.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,072, now 1,073.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,073, now 1,074.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,074, now 1,075.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,075, now 1,076.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,076, now 1,077.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,077, now 1,078.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,078, now 1,079.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,079, now 1,080.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,080, now 1,081.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,081, now 1,082.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,082, now 1,083.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,083, now 1,084.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,084, now 1,085.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,085, now 1,086.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,086, now 1,087.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,087, now 1,088.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,088, now 1,089.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,089, now 1,090.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,090, now 1,091.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,091, now 1,092.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,092, now 1,093.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,093, now 1,094.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,094, now 1,095.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,095, now 1,096.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,096, now 1,097.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,097, now 1,098.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,098, now 1,099.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,099, now 1,100.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,100, now 1,101.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,101, now 1,102.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,102, now 1,103.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,103, now 1,104.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,104, now 1,105.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,105, now 1,106.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,106, now 1,107.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,107, now 1,108.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,108, now 1,109.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,109, now 1,110.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,110, now 1,111.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,111, now 1,112.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,112, now 1,113.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,113, now 1,114.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,114, now 1,115.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,115, now 1,116.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,116, now 1,117.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,117, now 1,118.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,118, now 1,119.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,119, now 1,120.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,120, now 1,121.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,121, now 1,122.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,122, now 1,123.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,123, now 1,124.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,124, now 1,125.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,125, now 1,126.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,126, now 1,127.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,127, now 1,128.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,128, now 1,129.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,129, now 1,130.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,130, now 1,131.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,131, now 1,132.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,132, now 1,133.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,133, now 1,134.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,134, now 1,135.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,135, now 1,136.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,136, now 1,137.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,137, now 1,138.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,138, now 1,139.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,139, now 1,140.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,140, now 1,141.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,141, now 1,142.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,142, now 1,143.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,143, now 1,144.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,144, now 1,145.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,145, now 1,146.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,146, now 1,147.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,147, now 1,148.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,148, now 1,149.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,149, now 1,150.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,150, now 1,151.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,151, now 1,152.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,152, now 1,153.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,153, now 1,154.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,154, now 1,155.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,155, now 1,156.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,156, now 1,157.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,157, now 1,158.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,158, now 1,159.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,159, now 1,160.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,160, now 1,161.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,161, now 1,162.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,162, now 1,163.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,163, now 1,164.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,164, now 1,165.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,165, now 1,166.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,166, now 1,167.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,167, now 1,168.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,168, now 1,169.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,169, now 1,170.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,170, now 1,171.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,171, now 1,172.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,172, now 1,173.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,173, now 1,174.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,174, now 1,175.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,175, now 1,176.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,176, now 1,177.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,177, now 1,178.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,178, now 1,179.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,179, now 1,180.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,180, now 1,181.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,181, now 1,182.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,182, now 1,183.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,183, now 1,184.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,184, now 1,185.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,185, now 1,186.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,186, now 1,187.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,187, now 1,188.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,188, now 1,189.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,189, now 1,190.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,190, now 1,191.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,191, now 1,192.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,192, now 1,193.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,193, now 1,194.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,194, now 1,195.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,195, now 1,196.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,196, now 1,197.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,197, now 1,198.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,198, now 1,199.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,199, now 1,200.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,200, now 1,201.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,201, now 1,202.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,202, now 1,203.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,203, now 1,204.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,204, now 1,205.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,205, now 1,206.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,206, now 1,207.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,207, now 1,208.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,208, now 1,209.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,209, now 1,210.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,210, now 1,211.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,211, now 1,212.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,212, now 1,213.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,213, now 1,214.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,214, now 1,215.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,215, now 1,216.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,216, now 1,217.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,217, now 1,218.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,218, now 1,219.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,219, now 1,220.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,220, now 1,221.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,221, now 1,222.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,222, now 1,223.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,223, now 1,224.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,224, now 1,225.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,225, now 1,226.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,226, now 1,227.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,227, now 1,228.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,228, now 1,229.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,229, now 1,230.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,230, now 1,231.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,231, now 1,232.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,232, now 1,233.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,233, now 1,234.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,234, now 1,235.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,235, now 1,236.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,236, now 1,237.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,237, now 1,238.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,238, now 1,239.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,239, now 1,240.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,240, now 1,241.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,241, now 1,242.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,242, now 1,243.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,243, now 1,244.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,244, now 1,245.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,245, now 1,246.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,246, now 1,247.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,247, now 1,248.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,248, now 1,249.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,249, now 1,250.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,250, now 1,251.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,251, now 1,252.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,252, now 1,253.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,253, now 1,254.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,254, now 1,255.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,255, now 1,256.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,256, now 1,257.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,257, now 1,258.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,258, now 1,259.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,259, now 1,260.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,260, now 1,261.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,261, now 1,262.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,262, now 1,263.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,263, now 1,264.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,264, now 1,265.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,265, now 1,266.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,266, now 1,267.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,267, now 1,268.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,268, now 1,269.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,269, now 1,270.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,270, now 1,271.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,271, now 1,272.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,272, now 1,273.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,273, now 1,274.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,274, now 1,275.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,275, now 1,276.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,276, now 1,277.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,277, now 1,278.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,278, now 1,279.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,279, now 1,280.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,280, now 1,281.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,281, now 1,282.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,282, now 1,283.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,283, now 1,284.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,284, now 1,285.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,285, now 1,286.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,286, now 1,287.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,287, now 1,288.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,288, now 1,289.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,289, now 1,290.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,290, now 1,291.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,291, now 1,292.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,292, now 1,293.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,293, now 1,294.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,294, now 1,295.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,295, now 1,296.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,296, now 1,297.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,297, now 1,298.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,298, now 1,299.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,299, now 1,300.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,300, now 1,301.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,301, now 1,302.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,302, now 1,303.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,303, now 1,304.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,304, now 1,305.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,305, now 1,306.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,306, now 1,307.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,307, now 1,308.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,308, now 1,309.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,309, now 1,310.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,310, now 1,311.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,311, now 1,312.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,312, now 1,313.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,313, now 1,314.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,314, now 1,315.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,315, now 1,316.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,316, now 1,317.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,317, now 1,318.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,318, now 1,319.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,319, now 1,320.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,320, now 1,321.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,321, now 1,322.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,322, now 1,323.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,323, now 1,324.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,324, now 1,325.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,325, now 1,326.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,326, now 1,327.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,327, now 1,328.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,328, now 1,329.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,329, now 1,330.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,330, now 1,331.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,331, now 1,332.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,332, now 1,333.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,333, now 1,334.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,334, now 1,335.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,335, now 1,336.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,336, now 1,337.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,337, now 1,338.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,338, now 1,339.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,339, now 1,340.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,340, now 1,341.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,341, now 1,342.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,342, now 1,343.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,343, now 1,344.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,344, now 1,345.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,345, now 1,346.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,346, now 1,347.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,347, now 1,348.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,348, now 1,349.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,349, now 1,350.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,350, now 1,351.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,351, now 1,352.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,352, now 1,353.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,353, now 1,354.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,354, now 1,355.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,355, now 1,356.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,356, now 1,357.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,357, now 1,358.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,358, now 1,359.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,359, now 1,360.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,360, now 1,361.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,361, now 1,362.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,362, now 1,363.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,363, now 1,364.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,364, now 1,365.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,365, now 1,366.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,366, now 1,367.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,367, now 1,368.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,368, now 1,369.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,369, now 1,370.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,370, now 1,371.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,371, now 1,372.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,372, now 1,373.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,373, now 1,374.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,374, now 1,375.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,375, now 1,376.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,376, now 1,377.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,377, now 1,378.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,378, now 1,379.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,379, now 1,380.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,380, now 1,381.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,381, now 1,382.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,382, now 1,383.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,383, now 1,384.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,384, now 1,385.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,385, now 1,386.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,386, now 1,387.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,387, now 1,388.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,388, now 1,389.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,389, now 1,390.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,390, now 1,391.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,391, now 1,392.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,392, now 1,393.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,393, now 1,394.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,394, now 1,395.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,395, now 1,396.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,396, now 1,397.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,397, now 1,398.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,398, now 1,399.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,399, now 1,400.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,400, now 1,401.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,401, now 1,402.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,402, now 1,403.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,403, now 1,404.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,404, now 1,405.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,405, now 1,406.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,406, now 1,407.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,407, now 1,408.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,408, now 1,409.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,409, now 1,410.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,410, now 1,411.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,411, now 1,412.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,412, now 1,413.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,413, now 1,414.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,414, now 1,415.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,415, now 1,416.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,416, now 1,417.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,417, now 1,418.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,418, now 1,419.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,419, now 1,420.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,420, now 1,421.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,421, now 1,422.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,422, now 1,423.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,423, now 1,424.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,424, now 1,425.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,425, now 1,426.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,426, now 1,427.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,427, now 1,428.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,428, now 1,429.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,429, now 1,430.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,430, now 1,431.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,431, now 1,432.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,432, now 1,433.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,433, now 1,434.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,434, now 1,435.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,435, now 1,436.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,436, now 1,437.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,437, now 1,438.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,438, now 1,439.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,439, now 1,440.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,440, now 1,441.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,441, now 1,442.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,442, now 1,443.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,443, now 1,444.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,444, now 1,445.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,445, now 1,446.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,446, now 1,447.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,447, now 1,448.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,448, now 1,449.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,449, now 1,450.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,450, now 1,451.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,451, now 1,452.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,452, now 1,453.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,453, now 1,454.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,454, now 1,455.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,455, now 1,456.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,456, now 1,457.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,457, now 1,458.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,458, now 1,459.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,459, now 1,460.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,460, now 1,461.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,461, now 1,462.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,462, now 1,463.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,463, now 1,464.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,464, now 1,465.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,465, now 1,466.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,466, now 1,467.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,467, now 1,468.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,468, now 1,469.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,469, now 1,470.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,470, now 1,471.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,471, now 1,472.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,472, now 1,473.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,473, now 1,474.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,474, now 1,475.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,475, now 1,476.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,476, now 1,477.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,477, now 1,478.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,478, now 1,479.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,479, now 1,480.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,480, now 1,481.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,481, now 1,482.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,482, now 1,483.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,483, now 1,484.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,484, now 1,485.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,485, now 1,486.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,486, now 1,487.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,487, now 1,488.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,488, now 1,489.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,489, now 1,490.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,490, now 1,491.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,491, now 1,492.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,492, now 1,493.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,493, now 1,494.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,494, now 1,495.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,495, now 1,496.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,496, now 1,497.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,497, now 1,498.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,498, now 1,499.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,499, now 1,500.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,500, now 1,501.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,501, now 1,502.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,502, now 1,503.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,503, now 1,504.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,504, now 1,505.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,505, now 1,506.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,506, now 1,507.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,507, now 1,508.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,508, now 1,509.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,509, now 1,510.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,510, now 1,511.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,511, now 1,512.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,512, now 1,513.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,513, now 1,514.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,514, now 1,515.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,515, now 1,516.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,516, now 1,517.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,517, now 1,518.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,518, now 1,519.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,519, now 1,520.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,520, now 1,521.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,521, now 1,522.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,522, now 1,523.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,523, now 1,524.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,524, now 1,525.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,525, now 1,526.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,526, now 1,527.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,527, now 1,528.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,528, now 1,529.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,529, now 1,530.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,530, now 1,531.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,531, now 1,532.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,532, now 1,533.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,533, now 1,534.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,534, now 1,535.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,535, now 1,536.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,536, now 1,537.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,537, now 1,538.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,538, now 1,539.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,539, now 1,540.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,540, now 1,541.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,541, now 1,542.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,542, now 1,543.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,543, now 1,544.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,544, now 1,545.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,545, now 1,546.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,546, now 1,547.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,547, now 1,548.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,548, now 1,549.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,549, now 1,550.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,550, now 1,551.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,551, now 1,552.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,552, now 1,553.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,553, now 1,554.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,554, now 1,555.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,555, now 1,556.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,556, now 1,557.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,557, now 1,558.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,558, now 1,559.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,559, now 1,560.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,560, now 1,561.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,561, now 1,562.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,562, now 1,563.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,563, now 1,564.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,564, now 1,565.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,565, now 1,566.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,566, now 1,567.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,567, now 1,568.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,568, now 1,569.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,569, now 1,570.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,570, now 1,571.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,571, now 1,572.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,572, now 1,573.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,573, now 1,574.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,574, now 1,575.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,575, now 1,576.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,576, now 1,577.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,577, now 1,578.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,578, now 1,579.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,579, now 1,580.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,580, now 1,581.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,581, now 1,582.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,582, now 1,583.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,583, now 1,584.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,584, now 1,585.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,585, now 1,586.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,586, now 1,587.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,587, now 1,588.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,588, now 1,589.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,589, now 1,590.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,590, now 1,591.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,591, now 1,592.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,592, now 1,593.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,593, now 1,594.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,594, now 1,595.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,595, now 1,596.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,596, now 1,597.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,597, now 1,598.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,598, now 1,599.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,599, now 1,600.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,600, now 1,601.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,601, now 1,602.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,602, now 1,603.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,603, now 1,604.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,604, now 1,605.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,605, now 1,606.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,606, now 1,607.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,607, now 1,608.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,608, now 1,609.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,609, now 1,610.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,610, now 1,611.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,611, now 1,612.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,612, now 1,613.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,613, now 1,614.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,614, now 1,615.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,615, now 1,616.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,616, now 1,617.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,617, now 1,618.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,618, now 1,619.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,619, now 1,620.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,620, now 1,621.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,621, now 1,622.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,622, now 1,623.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,623, now 1,624.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,624, now 1,625.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,625, now 1,626.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,626, now 1,627.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,627, now 1,628.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,628, now 1,629.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,629, now 1,630.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,630, now 1,631.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,631, now 1,632.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,632, now 1,633.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,633, now 1,634.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,634, now 1,635.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,635, now 1,636.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,636, now 1,637.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,637, now 1,638.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,638, now 1,639.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,639, now 1,640.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,640, now 1,641.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,641, now 1,642.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,642, now 1,643.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,643, now 1,644.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,644, now 1,645.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,645, now 1,646.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,646, now 1,647.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,647, now 1,648.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,648, now 1,649.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,649, now 1,650.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,650, now 1,651.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,651, now 1,652.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,652, now 1,653.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,653, now 1,654.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,654, now 1,655.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,655, now 1,656.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,656, now 1,657.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,657, now 1,658.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,658, now 1,659.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,659, now 1,660.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,660, now 1,661.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,661, now 1,662.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,662, now 1,663.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,663, now 1,664.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,664, now 1,665.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,665, now 1,666.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,666, now 1,667.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,667, now 1,668.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,668, now 1,669.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,669, now 1,670.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,670, now 1,671.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,671, now 1,672.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,672, now 1,673.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,673, now 1,674.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,674, now 1,675.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,675, now 1,676.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,676, now 1,677.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,677, now 1,678.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,678, now 1,679.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,679, now 1,680.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,680, now 1,681.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,681, now 1,682.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,682, now 1,683.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,683, now 1,684.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,684, now 1,685.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,685, now 1,686.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,686, now 1,687.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,687, now 1,688.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,688, now 1,689.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,689, now 1,690.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,690, now 1,691.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,691, now 1,692.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,692, now 1,693.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,693, now 1,694.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,694, now 1,695.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,695, now 1,696.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,696, now 1,697.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,697, now 1,698.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,698, now 1,699.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,699, now 1,700.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,700, now 1,701.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,701, now 1,702.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,702, now 1,703.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,703, now 1,704.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,704, now 1,705.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,705, now 1,706.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,706, now 1,707.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,707, now 1,708.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,708, now 1,709.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,709, now 1,710.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,710, now 1,711.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,711, now 1,712.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,712, now 1,713.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,713, now 1,714.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,714, now 1,715.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,715, now 1,716.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,716, now 1,717.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,717, now 1,718.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,718, now 1,719.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,719, now 1,720.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,720, now 1,721.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,721, now 1,722.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,722, now 1,723.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,723, now 1,724.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,724, now 1,725.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,725, now 1,726.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,726, now 1,727.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,727, now 1,728.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,728, now 1,729.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,729, now 1,730.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,730, now 1,731.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,731, now 1,732.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,732, now 1,733.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,733, now 1,734.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,734, now 1,735.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,735, now 1,736.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,736, now 1,737.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,737, now 1,738.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,738, now 1,739.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,739, now 1,740.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,740, now 1,741.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,741, now 1,742.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,742, now 1,743.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,743, now 1,744.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,744, now 1,745.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,745, now 1,746.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,746, now 1,747.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,747, now 1,748.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,748, now 1,749.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,749, now 1,750.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,750, now 1,751.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,751, now 1,752.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,752, now 1,753.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,753, now 1,754.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,754, now 1,755.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,755, now 1,756.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,756, now 1,757.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,757, now 1,758.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,758, now 1,759.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+Number of observations (_N) was 1,759, now 1,760.
+(1 real change made)
+(1 real change made)
+(1 real change made)
+
+. 
+. * Merge to annual income 
+. merge m:1 year combined using "constructed/annual_income"
+
+    Result                      Number of obs
+    -----------------------------------------
+    Not matched                             4
+        from master                         0  (_merge==1)
+        from using                          4  (_merge==2)
+
+    Matched                             1,760  (_merge==3)
+    -----------------------------------------
+
+. 
+. * Replace value of social housing
+. replace exp_sh_hh = 12*631/disposable_income if combined >= 5 & combined <= 6
+>  & year == 2008
+(44 real changes made)
+
+. replace exp_sh_hh = 12*647/disposable_income if combined >= 5 & combined <= 6
+>  & year == 2009
+(44 real changes made)
+
+. replace exp_sh_hh = 12*647/disposable_income if combined >= 5 & combined <= 6
+>  & year == 2010
+(44 real changes made)
+
+. replace exp_sh_hh = 12*652/disposable_income if combined >= 5 & combined <= 6
+>  & year == 2011
+(44 real changes made)
+
+. replace exp_sh_hh = 12*664/disposable_income if combined >= 5 & combined <= 6
+>  & year == 2012
+(44 real changes made)
+
+. replace exp_sh_hh = 12*681/disposable_income if combined >= 5 & combined <= 6
+>  & year == 2013
+(44 real changes made)
+
+. replace exp_sh_hh = 12*699/disposable_income if combined >= 5 & combined <= 6
+>  & year == 2014
+(44 real changes made)
+
+. replace exp_sh_hh = 12*710/disposable_income if combined >= 5 & combined <= 6
+>  & year == 2015
+(44 real changes made)
+
+. replace exp_sh_hh = 12*710/disposable_income if combined >= 5 & combined <= 6
+>  & year == 2016
+(44 real changes made)
+
+. replace exp_sh_hh = 12*710/disposable_income if combined >= 5 & combined <= 6
+>  & year == 2017
+(44 real changes made)
+
+. replace exp_sh_hh = 12*710/disposable_income if combined >= 5 & combined <= 6
+>  & year == 2018
+(44 real changes made)
+
+. 
+. * Tourists caibrated from Loon and Rouwendal (2017)
+. * https://link.springer.com/article/10.1007/s10824-017-9293-1
+. replace exp_sh_hh = 1-0.5164 if combined == 7
+(264 real changes made)
+
+. 
+. gen exp_sh_c = 1-exp_sh_hh
+(48 missing values generated)
+
+. 
+. * Collapse at the group level
+. collapse exp_sh_hh exp_sh_c, by(combined)
+
+. rename exp_sh_hh exp_sh
+
+. 
+. * Save
+. save constructed/expenditure_shares, replace
+file constructed/expenditure_shares.dta saved
+
+. export delimited final/inputs/expenditure_shares, replace
+file final/inputs/expenditure_shares.csv saved
+
+. 
+end of do-file
+
+. cd "$DROPBOX_AMENITIES/code/0_dataprep/subfiles"
+/Users/junbiao/PhD/Almagro2025_replication/code/0_dataprep/subfiles
+
+. do 0_prep_housing_characteristics.do
+
+. * ---------------------------------------------------------------------------
+> ---
+. * Project: Endogenous Amenities and Location Sorting
+. * Purpose: Prepare exported data on housing characteristics
+. * Author: Milena Almagro
+. * ---------------------------------------------------------------------------
+> ---
+. 
+. cd "$DROPBOX_AMENITIES/data"
+/Users/junbiao/PhD/Almagro2025_replication/data
+
+. import delimited "cbs/exports/wijk_housing_characteristics/Wijk- Housing char
+> acteristics - April 2022.csv", clear
+(encoding automatically selected: ISO-8859-1)
+(54 vars, 1,285 obs)
+
+. 
+. * Crosswalk from wijks (neighborhoods) to gebieds (districts)
+. gen wk = wk_code - 36300
+
+. merge m:1 wk using "shapefiles/wijk_to_gb"
+
+    Result                      Number of obs
+    -----------------------------------------
+    Not matched                             0
+    Matched                             1,285  (_merge==3)
+    -----------------------------------------
+
+. 
+. keep year wk gb total_units total_usage_1 total_usage_9 total_usage_* total_s
+> tage_* total_new_units_by_usage_1 area_by_usage_1 area_sq_m year_built 
+
+. 
+. * Compute counts and weighted average by gebied
+. local varlist "units usage_1 usage_2 usage_3 usage_4 usage_5 usage_6 usage_7 
+> usage_8 usage_9 usage_10 usage_11 stage_1 stage_2 stage_3 stage_4 stage_5 new
+> _units_by_usage_1"
+
+. foreach var in `varlist'{
+  2.         rename total_`var' `var'
+  3.         bysort year gb: egen total_`var' = sum(`var')
+  4. }
+
+. 
+. gen _area_by_usage_1 = area_by_usage_1*usage_1
+(9 missing values generated)
+
+. gen _area_sq_m = area_sq_m*units
+(8 missing values generated)
+
+. gen _year_built = year_built*units
+(8 missing values generated)
+
+. 
+. local varlist "area_sq_m year_built"
+
+. foreach var in `varlist'{
+  2.         bysort year gb: egen total_`var' = sum(_`var')
+  3.         gen w_`var' = total_`var'/total_units 
+  4. }
+
+. 
+. bysort year gb: egen total_area_by_usage_1 = sum(_area_by_usage_1)
+
+. gen w_area_by_usage_1 = total_area_by_usage_1/total_usage_1
+
+. 
+. drop _*
+
+. 
+. * Collapse at the gebied level
+. collapse total_units total_usage_*  total_stage_* total_new_units_by_usage_1 
+> w_*,by(year gb)
+
+. 
+. * Rename
+. rename w_area_sq_m area_sq_m
+
+. rename w_year_built year_built
+
+. rename w_area_by_usage_1 area_by_usage_1
+
+. 
+. * Recenter year built to 1850
+. gen log_year_built_new = log(year_built-1850)
+
+. 
+. cd "$DROPBOX_AMENITIES/data/constructed/"
+/Users/junbiao/PhD/Almagro2025_replication/data/constructed
+
+. save gebied_housing_characteristics_from_wk, replace
+file gebied_housing_characteristics_from_wk.dta saved
+
+. export delimited gebied_housing_characteristics_from_wk, replace
+file gebied_housing_characteristics_from_wk.csv saved
+
+. 
+end of do-file
+
+. cd "$DROPBOX_AMENITIES/code/0_dataprep/subfiles"
+/Users/junbiao/PhD/Almagro2025_replication/code/0_dataprep/subfiles
+
+. do 0_prep_housing_prices.do
+
+. * ---------------------------------------------------------------------------
+> ---
+. * Project: Endogenous Amenities and Location Sorting
+. * Purpose: Prepare exported data on rents and transaction values
+. * Author: Milena Almagro
+. * ---------------------------------------------------------------------------
+> ---
+. 
+. 
+. * Save rents *
+. cd "$DROPBOX_AMENITIES/data/cbs/exports/housing_prices"
+/Users/junbiao/PhD/Almagro2025_replication/data/cbs/exports/housing_prices
+
+. import excel "House and Rent Priced by gebied - February 2022", sheet("Impute
+> d Rent") first clear
+(15 vars, 277 obs)
+
+. keep year gb net_rent* median*
+
+. cd "$DROPBOX_AMENITIES/data/constructed/"
+/Users/junbiao/PhD/Almagro2025_replication/data/constructed
+
+. save imputed_rent, replace
+file imputed_rent.dta saved
+
+. export delimited imputed_rent, replace
+file imputed_rent.csv saved
+
+. 
+. * Save transaction values*
+. cd "$DROPBOX_AMENITIES/data/cbs/exports/housing_prices"
+/Users/junbiao/PhD/Almagro2025_replication/data/cbs/exports/housing_prices
+
+. import excel "House and Rent Priced by gebied - February 2022", sheet("Transa
+> ction Values") first clear
+(8 vars, 565 obs)
+
+. keep year gb transaction* median*
+
+. cd "$DROPBOX_AMENITIES/data/constructed/"
+/Users/junbiao/PhD/Almagro2025_replication/data/constructed
+
+. save transaction_values, replace
+file transaction_values.dta saved
+
+. 
+end of do-file
+
+. cd "$DROPBOX_AMENITIES/code/0_dataprep/subfiles"
+/Users/junbiao/PhD/Almagro2025_replication/code/0_dataprep/subfiles
+
+. do 0_prep_population_counts.do
+
+. * ---------------------------------------------------------------------------
+> ---
+. * Project: Endogenous Amenities and Location Sorting
+. * Purpose: Prepare exported data on population counts
+. * Author: Milena Almagro
+. * ---------------------------------------------------------------------------
+> ---
+. 
+. 
+. * Create population counts by district within Amsterdam 
+. cd "$DROPBOX_AMENITIES/data/cbs/exports/group_characteristics"
+/Users/junbiao/PhD/Almagro2025_replication/data/cbs/exports/group_characteristi
+> cs
+
+. import excel "Group Characteristics - April 2022", sheet("Yearly Income") fir
+> st clear
+(12 vars, 2,090 obs)
+
+. keep year gb combined num_hh
+
+. 
+. * Drop if district unknown (gb == 0)
+. drop if gb == 0
+(69 observations deleted)
+
+. cd "$DROPBOX_AMENITIES/data/constructed/"
+/Users/junbiao/PhD/Almagro2025_replication/data/constructed
+
+. drop if year == .
+(6 observations deleted)
+
+. drop if gb == .
+(83 observations deleted)
+
+. drop if combined == .
+(276 observations deleted)
+
+. export delimited gebied_population_counts_panel, replace
+file gebied_population_counts_panel.csv saved
+
+. save gebied_population_counts_panel, replace
+file gebied_population_counts_panel.dta saved
+
+. 
+. cd "$DROPBOX_AMENITIES/data/final/inputs"
+/Users/junbiao/PhD/Almagro2025_replication/data/final/inputs
+
+. export delimited gebied_population_counts_panel, replace
+file gebied_population_counts_panel.csv saved
+
+. 
+. * Create population counts by state variable
+. forval i = 1/4{
+  2.         cd "$DROPBOX_AMENITIES/data/cbs/exports/MNL_coefficients"
+  3.         import excel "MNL Coefficients - April 2022", sheet("Predicted pro
+> babilities `i'") first clear
+  4.         collapse num_hh, by(year p_gb p_tau)
+  5.         gen combined_cluster = `i'
+  6.         cd "$DROPBOX_AMENITIES/data/constructed/"
+  7.         export delimited population_counts_by_state_g_`i', replace
+  8. }
+/Users/junbiao/PhD/Almagro2025_replication/data/cbs/exports/MNL_coefficients
+(8 vars, 12,696 obs)
+/Users/junbiao/PhD/Almagro2025_replication/data/constructed
+file population_counts_by_state_g_1.csv saved
+/Users/junbiao/PhD/Almagro2025_replication/data/cbs/exports/MNL_coefficients
+(8 vars, 12,696 obs)
+/Users/junbiao/PhD/Almagro2025_replication/data/constructed
+file population_counts_by_state_g_2.csv saved
+/Users/junbiao/PhD/Almagro2025_replication/data/cbs/exports/MNL_coefficients
+(8 vars, 12,696 obs)
+/Users/junbiao/PhD/Almagro2025_replication/data/constructed
+file population_counts_by_state_g_3.csv saved
+/Users/junbiao/PhD/Almagro2025_replication/data/cbs/exports/MNL_coefficients
+(8 vars, 12,696 obs)
+/Users/junbiao/PhD/Almagro2025_replication/data/constructed
+file population_counts_by_state_g_4.csv saved
+
+. 
+. * Append all groups
+. cd "$DROPBOX_AMENITIES/data/constructed/"
+/Users/junbiao/PhD/Almagro2025_replication/data/constructed
+
+. import delimited population_counts_by_state_g_1, clear
+(encoding automatically selected: ISO-8859-1)
+(5 vars, 552 obs)
+
+. save population_counts_by_state, replace 
+file population_counts_by_state.dta saved
+
+. forval i = 2/4{
+  2.         import delimited population_counts_by_state_g_`i', clear
+  3.         append using population_counts_by_state
+  4.         save population_counts_by_state, replace
+  5. }
+(encoding automatically selected: ISO-8859-1)
+(5 vars, 552 obs)
+file population_counts_by_state.dta saved
+(encoding automatically selected: ISO-8859-1)
+(5 vars, 552 obs)
+file population_counts_by_state.dta saved
+(encoding automatically selected: ISO-8859-1)
+(5 vars, 552 obs)
+file population_counts_by_state.dta saved
+
+. 
+end of do-file
+
+. cd "$DROPBOX_AMENITIES/code/0_dataprep/subfiles"
+/Users/junbiao/PhD/Almagro2025_replication/code/0_dataprep/subfiles
+
+. do 0_prep_tenancy_counts.do
+
+. * ---------------------------------------------------------------------------
+> ---
+. * Project: Endogenous Amenities and Location Sorting
+. * Purpose: Prepare exported data on housing tenancy counts 
+. * Author: Milena Almagro
+. * ---------------------------------------------------------------------------
+> ---
+. 
+. * Save tenancy status by gebied (district)
+. cd "$DROPBOX_AMENITIES/data/cbs/exports/220224_0500_Gebied - Tenancy counts -
+>  February 2022"
+/Users/junbiao/PhD/Almagro2025_replication/data/cbs/exports/220224_0500_Gebied 
+> - Tenancy counts - February 2022
+
+. import delimited "gebied_tenancy_status_counts", clear
+(encoding automatically selected: UTF-8)
+(6 vars, 330 obs)
+
+. 
+. local varlist "num_obs0 num_obs1 num_obs2 num_obs3"
+
+. 
+. forval i=1/3 {
+  2.         rename num_obs`i' tenancy_status_`i'
+  3. }
+
+. 
+. keep year gb tenancy*
+
+. cd "$DROPBOX_AMENITIES/data/constructed"
+/Users/junbiao/PhD/Almagro2025_replication/data/constructed
+
+. save gb_tenancy_counts, replace
+file gb_tenancy_counts.dta saved
+
+. export delimited gb_tenancy_counts, replace
+file gb_tenancy_counts.csv saved
+
+. 
+. 
+end of do-file
+
+. cd "$DROPBOX_AMENITIES/code/0_dataprep/subfiles"
+/Users/junbiao/PhD/Almagro2025_replication/code/0_dataprep/subfiles
+
+. do 0_prep_transition_tau.do
+
+. * ---------------------------------------------------------------------------
+> ---
+. * Project: Endogenous Amenities and Location Sorting
+. * Purpose: Prepare exported data on demographic groups probability transition
+> s
+. * Author: Milena Almagro
+. * ---------------------------------------------------------------------------
+> ---
+. 
+. cd "$DROPBOX_AMENITIES/data"
+/Users/junbiao/PhD/Almagro2025_replication/data
+
+. 
+. forval i =1/3{
+  2.         import excel "cbs/exports/220331_0500_Transition location tenure -
+>  April 2022/Transition location tenure - April 2022", sheet("Transition `i'")
+>  first clear
+  3.         export delimited constructed/tau_transition_probs_`i', replace
+  4. }
+(6 vars, 276 obs)
+file constructed/tau_transition_probs_1.csv saved
+(6 vars, 276 obs)
+file constructed/tau_transition_probs_2.csv saved
+(6 vars, 276 obs)
+file constructed/tau_transition_probs_3.csv saved
+
+. 
+. import delimited constructed/tau_transition_probs_1, clear
+(encoding automatically selected: ISO-8859-1)
+(6 vars, 276 obs)
+
+. save constructed/tau_transition_probs_all, replace
+file constructed/tau_transition_probs_all.dta saved
+
+. forval i =2/3{
+  2.         import delimited constructed/tau_transition_probs_`i', clear
+  3.         append using constructed/tau_transition_probs_all
+  4.         save constructed/tau_transition_probs_all, replace
+  5. }
+(encoding automatically selected: ISO-8859-1)
+(6 vars, 276 obs)
+file constructed/tau_transition_probs_all.dta saved
+(encoding automatically selected: ISO-8859-1)
+(6 vars, 276 obs)
+file constructed/tau_transition_probs_all.dta saved
+
+. export delimited final/inputs/tau_transition_probs_all, replace
+file final/inputs/tau_transition_probs_all.csv saved
+
+. 
+end of do-file
+
+. 
+. log close
+      name:  <unnamed>
+       log:  /Users/junbiao/PhD/Almagro2025_replication/code/0_dataprep/0_maste
+> r_dataprep_raw.log
+  log type:  text
+ closed on:   8 Sep 2025, 20:52:15
+-------------------------------------------------------------------------------

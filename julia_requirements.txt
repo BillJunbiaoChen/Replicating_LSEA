@@ -1,0 +1,16 @@
+Base.Threads
+CSV
+Combinatorics
+DataFrames
+DelimitedFiles
+Distributed
+Distributions
+ForwardDiff
+GLM
+LinearAlgebra
+Optim
+Plots
+Printf
+Random
+StatsBase
+XLSX

@@ -1,0 +1,895 @@
+-------------------------------------------------------------------------------
+      name:  <unnamed>
+       log:  /Users/junbiao/PhD/Almagro2025_replication/code/0_dataprep/3_maste
+> r_dataprep_final.log
+  log type:  text
+ opened on:   8 Sep 2025, 21:01:29
+
+. 
+. * Get the current directory
+. local current_dir = c(pwd)
+
+. 
+. * Go one level up by finding the position of the last '/'
+. local last_slash_pos = strrpos("`current_dir'", "/")
+
+. local parent_dir = substr("`current_dir'", 1, `last_slash_pos' - 1)
+
+. 
+. * Go two levels up by finding the position of the last '/' in the parent dire
+> ctory
+. local last_slash_pos_parent = strrpos("`parent_dir'", "/")
+
+. local grandparent_dir = substr("`parent_dir'", 1, `last_slash_pos_parent' - 1
+> )
+
+. 
+. * Set the global variable
+. global DROPBOX_AMENITIES "`grandparent_dir'"
+
+. 
+. display "Global DROPBOX_AMENITIES is set to: $DROPBOX_AMENITIES"
+Global DROPBOX_AMENITIES is set to: /Users/junbiao/PhD/Almagro2025_replication
+
+. 
+. cd "$DROPBOX_AMENITIES/code/0_dataprep/subfiles"
+/Users/junbiao/PhD/Almagro2025_replication/code/0_dataprep/subfiles
+
+. do 4_neighborhood_panel_housing_characteristics.do
+
+. * ---------------------------------------------------------------------------
+> ---
+. * Project: Location Sorting and Endogenous Amenities
+. * Purpose: Construct neighborhood panel of covariates
+. * Author: Milena Almagro
+. * ---------------------------------------------------------------------------
+> ---
+. cd "$DROPBOX_AMENITIES/data"
+/Users/junbiao/PhD/Almagro2025_replication/data
+
+. 
+. ****** Merge everything together, start with covariates ******
+. import delimited "constructed/neighborhood_panel_gebied.csv", clear
+(encoding automatically selected: ISO-8859-1)
+(19 vars, 242 obs)
+
+. rename gb_code gb
+
+. 
+. *** construct crosswalk from gebied to stadsteel **
+. preserve
+
+. keep if year == 2008
+(220 observations deleted)
+
+. keep sd_code gb
+
+. export delimited "constructed/crosswalk_gebied_sd.csv", replace
+file constructed/crosswalk_gebied_sd.csv saved
+
+. restore
+
+. 
+. * Construct population tourists
+. bysort year: egen total_tourists_city = sum(pop_tourists_total)
+
+. gen pct_tourists = pop_tourists_total/total_tourists_city
+(154 missing values generated)
+
+. 
+. * Merge to tenancy counts
+. merge 1:1 year gb using  constructed/gb_tenancy_counts
+
+    Result                      Number of obs
+    -----------------------------------------
+    Not matched                            88
+        from master                         0  (_merge==1)
+        from using                         88  (_merge==2)
+
+    Matched                               242  (_merge==3)
+    -----------------------------------------
+
+. keep if _merge == 3
+(88 observations deleted)
+
+. drop _merge
+
+. 
+. * Merge to rent 
+. merge 1:1 year gb using constructed/imputed_rent
+
+    Result                      Number of obs
+    -----------------------------------------
+    Not matched                            35
+        from master                         0  (_merge==1)
+        from using                         35  (_merge==2)
+
+    Matched                               242  (_merge==3)
+    -----------------------------------------
+
+. keep if _merge == 3
+(35 observations deleted)
+
+. drop _merge
+
+. 
+. * Merge to transaction values 
+. merge 1:1 year gb using constructed/transaction_values
+
+    Result                      Number of obs
+    -----------------------------------------
+    Not matched                           323
+        from master                         0  (_merge==1)
+        from using                        323  (_merge==2)
+
+    Matched                               242  (_merge==3)
+    -----------------------------------------
+
+. keep if _merge == 3
+(323 observations deleted)
+
+. drop _merge
+
+. 
+. * Merge to housing characteristics 
+. merge m:1 year gb using constructed/gebied_housing_characteristics_from_wk
+
+    Result                      Number of obs
+    -----------------------------------------
+    Not matched                            57
+        from master                         0  (_merge==1)
+        from using                         57  (_merge==2)
+
+    Matched                               242  (_merge==3)
+    -----------------------------------------
+
+. keep if _merge == 3
+(57 observations deleted)
+
+. drop _merge
+
+. 
+. keep year gb sd_code tourism_offices tourism_offices_net_hotels bars_location
+> s restaurants_locations food_stores ///
+> nonfood_stores nurseries ///
+> hotel_beds airbnb_beds pop_tourists* ///
+> tenancy_status_1 tenancy_status_2 tenancy_status_3 ///
+> net_rent_hat_rf ///
+>  area_by_usage_1 total_usage_1 total_stage_5 
+
+. 
+. * Prepare covariates
+. gen social_housing = tenancy_status_3 
+
+. gen log_social_housing = log(social_housing)
+
+. gen log_rent_meter = log(12*net_rent_hat_rf/area_by_usage_1)
+
+. gen log_area_by_usage_1 = log(area_by_usage_1)
+
+. replace total_stage_5 = 0 if total_stage_5 == .
+(0 real changes made)
+
+. replace total_stage_5 = total_stage_5 + 1
+(242 real changes made)
+
+. gen log_stage_5 = log(total_stage_5)
+
+. rename area_by_usage_1 area_sq_m
+
+. gen unit_rent = 12*net_rent_hat_rf 
+
+. 
+. * Rename amenities
+. local varlist "tourism_offices_net_hotels restaurants_locations bars_location
+> s food_stores nonfood_stores nurseries"
+
+. local i = 1
+
+. foreach var in `varlist' {
+  2.         gen amenity_`i' = `var'
+  3.         gen log_amenity_`i' = log(`var')
+  4.         local i = `i' + 1
+  5. }
+
+. 
+. * Generate dummies
+. tab gb, gen(dummy_gb)
+
+         gb |      Freq.     Percent        Cum.
+------------+-----------------------------------
+          1 |         11        4.55        4.55
+          2 |         11        4.55        9.09
+          3 |         11        4.55       13.64
+          4 |         11        4.55       18.18
+          5 |         11        4.55       22.73
+          6 |         11        4.55       27.27
+          7 |         11        4.55       31.82
+          8 |         11        4.55       36.36
+          9 |         11        4.55       40.91
+         10 |         11        4.55       45.45
+         11 |         11        4.55       50.00
+         12 |         11        4.55       54.55
+         13 |         11        4.55       59.09
+         14 |         11        4.55       63.64
+         15 |         11        4.55       68.18
+         16 |         11        4.55       72.73
+         17 |         11        4.55       77.27
+         18 |         11        4.55       81.82
+         19 |         11        4.55       86.36
+         20 |         11        4.55       90.91
+         21 |         11        4.55       95.45
+         22 |         11        4.55      100.00
+------------+-----------------------------------
+      Total |        242      100.00
+
+. tab year, gen(dummy_year)
+
+       year |      Freq.     Percent        Cum.
+------------+-----------------------------------
+       2008 |         22        9.09        9.09
+       2009 |         22        9.09       18.18
+       2010 |         22        9.09       27.27
+       2011 |         22        9.09       36.36
+       2012 |         22        9.09       45.45
+       2013 |         22        9.09       54.55
+       2014 |         22        9.09       63.64
+       2015 |         22        9.09       72.73
+       2016 |         22        9.09       81.82
+       2017 |         22        9.09       90.91
+       2018 |         22        9.09      100.00
+------------+-----------------------------------
+      Total |        242      100.00
+
+. 
+. * Keep relevant variables
+. keep log_* dummy* *amenity* year gb sd_code pop* total_usage_1 tenancy* *beds
+> * area_sq_m unit_rent
+
+.  
+. save constructed/gebied_covariates_panel, replace
+file constructed/gebied_covariates_panel.dta saved
+
+. export delimited constructed/gebied_covariates_panel, replace
+file constructed/gebied_covariates_panel.csv saved
+
+. export delimited final/inputs/gebied_covariates_panel, replace
+file final/inputs/gebied_covariates_panel.csv saved
+
+. 
+. 
+end of do-file
+
+. cd "$DROPBOX_AMENITIES/code/0_dataprep/subfiles"
+/Users/junbiao/PhD/Almagro2025_replication/code/0_dataprep/subfiles
+
+. do 5_merge_population_counts.do
+
+. * ---------------------------------------------------------------------------
+> ---
+. * Project: Location Sorting and Endogenous Amenities
+. * Purpose: Combine population counts with tourists
+. * Author: Milena Almagro
+. * ---------------------------------------------------------------------------
+> ---
+. 
+. cd "$DROPBOX_AMENITIES/data"
+/Users/junbiao/PhD/Almagro2025_replication/data
+
+. use constructed/gebied_population_counts_panel, clear
+
+. 
+. egen group = group(gb year)
+
+. 
+. reshape wide num_hh, i(group) j(combined_cluster)
+(j = 1 2 3 4 5 6)
+
+Data                               Long   ->   Wide
+-----------------------------------------------------------------------------
+Number of observations            1,656   ->   276         
+Number of variables                   5   ->   9           
+j variable (6 values)  combined_cluster   ->   (dropped)
+xij variables:
+                                 num_hh   ->   num_hh1 num_hh2 ... num_hh6
+-----------------------------------------------------------------------------
+
+. 
+. merge 1:1 gb year using constructed/gebied_covariates_panel
+
+    Result                      Number of obs
+    -----------------------------------------
+    Not matched                            34
+        from master                        34  (_merge==1)
+        from using                          0  (_merge==2)
+
+    Matched                               242  (_merge==3)
+    -----------------------------------------
+
+. drop _merge
+
+. 
+. keep group gb year num_hh* pop*
+
+. 
+. gen num_hh7 = pop_tourists_hotels + pop_tourists_airbnb
+(34 missing values generated)
+
+. 
+. drop pop_*
+
+. 
+. reshape long num_hh, i(group) j(combined_cluster)
+(j = 1 2 3 4 5 6 7)
+
+Data                               Wide   ->   Long
+-----------------------------------------------------------------------------
+Number of observations              276   ->   1,932       
+Number of variables                  10   ->   5           
+j variable (7 values)                     ->   combined_cluster
+xij variables:
+            num_hh1 num_hh2 ... num_hh7   ->   num_hh
+-----------------------------------------------------------------------------
+
+. 
+. replace num_hh = 0 if num_hh == .
+(34 real changes made)
+
+. 
+. save constructed/gebied_population_w_tourists_counts_panel, replace
+file constructed/gebied_population_w_tourists_counts_panel.dta saved
+
+. export delimited final/inputs/gebied_population_w_tourists_counts_panel, repl
+> ace
+file final/inputs/gebied_population_w_tourists_counts_panel.csv saved
+
+. 
+end of do-file
+
+. cd "$DROPBOX_AMENITIES/code/0_dataprep/subfiles"
+/Users/junbiao/PhD/Almagro2025_replication/code/0_dataprep/subfiles
+
+. do 6_construct_panel_structural_amenities.do
+
+. * ---------------------------------------------------------------------------
+> ---
+. * Project: Location Sorting and Endogenous Amenities
+. * Purpose: Construct neighborhood panel for estimation of amenity supply
+. * Author: Milena Almagro
+. * ---------------------------------------------------------------------------
+> ---
+. 
+. cd "$DROPBOX_AMENITIES/data"
+/Users/junbiao/PhD/Almagro2025_replication/data
+
+. use constructed/gebied_covariates_panel, clear
+
+. 
+. * Merge with population
+. merge 1:m gb year using constructed/gebied_population_w_tourists_counts_panel
+(variable gb was byte, now int to accommodate using data's values)
+
+    Result                      Number of obs
+    -----------------------------------------
+    Not matched                           238
+        from master                         0  (_merge==1)
+        from using                        238  (_merge==2)
+
+    Matched                             1,694  (_merge==3)
+    -----------------------------------------
+
+. drop _merge
+
+. 
+. * Merge with income
+. merge m:1 combined year using constructed/annual_income
+
+    Result                      Number of obs
+    -----------------------------------------
+    Not matched                             0
+    Matched                             1,932  (_merge==3)
+    -----------------------------------------
+
+. drop _merge
+
+. 
+. * Merge with expenditure shares 
+. merge m:1 combined using constructed/expenditure_shares
+
+    Result                      Number of obs
+    -----------------------------------------
+    Not matched                             0
+    Matched                             1,932  (_merge==3)
+    -----------------------------------------
+
+. drop _merge
+
+. 
+. * Restrict years 
+. keep if year >= 2008 & year <= 2018
+(161 observations deleted)
+
+. 
+. * Keep only inside locations
+. keep if gb != 101
+(77 observations deleted)
+
+. 
+. * Generate total budget
+. gen budget_h = (1-exp_sh)*num_hh*disposable_income
+
+. gen inc_sh = (1-exp_sh)*disposable_income
+
+. 
+. keep amenity* budget_h* disposable_income* num_hh inc_sh* tenancy_status* *be
+> ds* gb combined year pop_tourists_hotels pop_tourists_airbnb sd_code 
+
+. 
+. * total number of amenities and groups
+. local S = 6
+
+. local K = 7
+
+. 
+. * Reshape to wide 
+. egen group = group(gb year)
+
+. reshape wide budget_h disposable_income num_hh inc_sh, i(group) j(combined)
+(j = 1 2 3 4 5 6 7)
+
+Data                               Long   ->   Wide
+-----------------------------------------------------------------------------
+Number of observations            1,694   ->   242         
+Number of variables                  22   ->   45          
+j variable (7 values)  combined_cluster   ->   (dropped)
+xij variables:
+                               budget_h   ->   budget_h1 budget_h2 ... budget_h
+> 7
+                      disposable_income   ->   disposable_income1 disposable_in
+> come2 ... disposable_income7
+                                 num_hh   ->   num_hh1 num_hh2 ... num_hh7
+                                 inc_sh   ->   inc_sh1 inc_sh2 ... inc_sh7
+-----------------------------------------------------------------------------
+
+. 
+. * Construct instruments
+. gen bartik_1 = inc_sh1*tenancy_status_1
+
+. gen bartik_2 = inc_sh2*tenancy_status_1
+
+. gen bartik_3 = inc_sh3*tenancy_status_2
+
+. gen bartik_4 = inc_sh4*tenancy_status_2
+
+. gen bartik_5 = inc_sh5*tenancy_status_3
+
+. gen bartik_6 = inc_sh6*tenancy_status_3
+
+. gen bartik_7 = inc_sh7*hotel_beds
+
+. 
+. reshape long amenity_, i(group) j(s)
+(j = 1 2 3 4 5 6)
+
+Data                               Wide   ->   Long
+-----------------------------------------------------------------------------
+Number of observations              242   ->   1,452       
+Number of variables                  52   ->   48          
+j variable (6 values)                     ->   s
+xij variables:
+      amenity_1 amenity_2 ... amenity_6   ->   amenity_
+-----------------------------------------------------------------------------
+
+. rename amenity_ amenity 
+
+. 
+. *Construct interactions
+. forval j = 1/`S'{
+  2.         forval k = 1/`K'{
+  3.                 gen budget_h_`j'_`k' = 0
+  4.                 replace budget_h_`j'_`k' = budget_h`k' if s == `j'
+  5.         }
+  6. }
+(242 real changes made)
+(242 real changes made)
+(242 real changes made)
+(242 real changes made)
+(242 real changes made)
+(242 real changes made)
+(236 real changes made)
+(242 real changes made)
+(242 real changes made)
+(242 real changes made)
+(242 real changes made)
+(242 real changes made)
+(242 real changes made)
+(236 real changes made)
+(242 real changes made)
+(242 real changes made)
+(242 real changes made)
+(242 real changes made)
+(242 real changes made)
+(242 real changes made)
+(236 real changes made)
+(242 real changes made)
+(242 real changes made)
+(242 real changes made)
+(242 real changes made)
+(242 real changes made)
+(242 real changes made)
+(236 real changes made)
+(242 real changes made)
+(242 real changes made)
+(242 real changes made)
+(242 real changes made)
+(242 real changes made)
+(242 real changes made)
+(236 real changes made)
+(242 real changes made)
+(242 real changes made)
+(242 real changes made)
+(242 real changes made)
+(242 real changes made)
+(242 real changes made)
+(236 real changes made)
+
+. 
+. * Construct instrument interactions
+. local varlist "bartik_1 bartik_2 bartik_3 bartik_4 bartik_5 bartik_6 bartik_7
+> "
+
+. forval j = 1/`S'{
+  2.         foreach var in `varlist' {
+  3.                 gen z_b_`j'_`var' = 0
+  4.                 replace z_b_`j'_`var' = `var' if s == `j'
+  5.         }
+  6. 
+. }
+(242 real changes made)
+(242 real changes made)
+(242 real changes made)
+(242 real changes made)
+(242 real changes made)
+(242 real changes made)
+(236 real changes made)
+(242 real changes made)
+(242 real changes made)
+(242 real changes made)
+(242 real changes made)
+(242 real changes made)
+(242 real changes made)
+(236 real changes made)
+(242 real changes made)
+(242 real changes made)
+(242 real changes made)
+(242 real changes made)
+(242 real changes made)
+(242 real changes made)
+(236 real changes made)
+(242 real changes made)
+(242 real changes made)
+(242 real changes made)
+(242 real changes made)
+(242 real changes made)
+(242 real changes made)
+(236 real changes made)
+(242 real changes made)
+(242 real changes made)
+(242 real changes made)
+(242 real changes made)
+(242 real changes made)
+(242 real changes made)
+(236 real changes made)
+(242 real changes made)
+(242 real changes made)
+(242 real changes made)
+(242 real changes made)
+(242 real changes made)
+(242 real changes made)
+(236 real changes made)
+
+. 
+. sort s gb year 
+
+. tab gb, gen(dummy_j)
+
+         gb |      Freq.     Percent        Cum.
+------------+-----------------------------------
+          1 |         66        4.55        4.55
+          2 |         66        4.55        9.09
+          3 |         66        4.55       13.64
+          4 |         66        4.55       18.18
+          5 |         66        4.55       22.73
+          6 |         66        4.55       27.27
+          7 |         66        4.55       31.82
+          8 |         66        4.55       36.36
+          9 |         66        4.55       40.91
+         10 |         66        4.55       45.45
+         11 |         66        4.55       50.00
+         12 |         66        4.55       54.55
+         13 |         66        4.55       59.09
+         14 |         66        4.55       63.64
+         15 |         66        4.55       68.18
+         16 |         66        4.55       72.73
+         17 |         66        4.55       77.27
+         18 |         66        4.55       81.82
+         19 |         66        4.55       86.36
+         20 |         66        4.55       90.91
+         21 |         66        4.55       95.45
+         22 |         66        4.55      100.00
+------------+-----------------------------------
+      Total |      1,452      100.00
+
+. tab year, gen(dummy_year)
+
+       year |      Freq.     Percent        Cum.
+------------+-----------------------------------
+       2008 |        132        9.09        9.09
+       2009 |        132        9.09       18.18
+       2010 |        132        9.09       27.27
+       2011 |        132        9.09       36.36
+       2012 |        132        9.09       45.45
+       2013 |        132        9.09       54.55
+       2014 |        132        9.09       63.64
+       2015 |        132        9.09       72.73
+       2016 |        132        9.09       81.82
+       2017 |        132        9.09       90.91
+       2018 |        132        9.09      100.00
+------------+-----------------------------------
+      Total |      1,452      100.00
+
+. 
+. bysort gb year: egen total_amenity = sum(amenity)
+
+. 
+. egen sd_code_year = group(sd_code year)
+
+. replace sd_code_year = . if year == 2008
+(132 real changes made, 132 to missing)
+
+. 
+. tab sd_code_year, gen(int_dummy)
+
+group(sd_co |
+   de year) |      Freq.     Percent        Cum.
+------------+-----------------------------------
+          2 |         12        0.91        0.91
+          3 |         12        0.91        1.82
+          4 |         12        0.91        2.73
+          5 |         12        0.91        3.64
+          6 |         12        0.91        4.55
+          7 |         12        0.91        5.45
+          8 |         12        0.91        6.36
+          9 |         12        0.91        7.27
+         10 |         12        0.91        8.18
+         11 |         12        0.91        9.09
+         13 |         18        1.36       10.45
+         14 |         18        1.36       11.82
+         15 |         18        1.36       13.18
+         16 |         18        1.36       14.55
+         17 |         18        1.36       15.91
+         18 |         18        1.36       17.27
+         19 |         18        1.36       18.64
+         20 |         18        1.36       20.00
+         21 |         18        1.36       21.36
+         22 |         18        1.36       22.73
+         24 |         24        1.82       24.55
+         25 |         24        1.82       26.36
+         26 |         24        1.82       28.18
+         27 |         24        1.82       30.00
+         28 |         24        1.82       31.82
+         29 |         24        1.82       33.64
+         30 |         24        1.82       35.45
+         31 |         24        1.82       37.27
+         32 |         24        1.82       39.09
+         33 |         24        1.82       40.91
+         35 |         18        1.36       42.27
+         36 |         18        1.36       43.64
+         37 |         18        1.36       45.00
+         38 |         18        1.36       46.36
+         39 |         18        1.36       47.73
+         40 |         18        1.36       49.09
+         41 |         18        1.36       50.45
+         42 |         18        1.36       51.82
+         43 |         18        1.36       53.18
+         44 |         18        1.36       54.55
+         46 |         24        1.82       56.36
+         47 |         24        1.82       58.18
+         48 |         24        1.82       60.00
+         49 |         24        1.82       61.82
+         50 |         24        1.82       63.64
+         51 |         24        1.82       65.45
+         52 |         24        1.82       67.27
+         53 |         24        1.82       69.09
+         54 |         24        1.82       70.91
+         55 |         24        1.82       72.73
+         57 |         18        1.36       74.09
+         58 |         18        1.36       75.45
+         59 |         18        1.36       76.82
+         60 |         18        1.36       78.18
+         61 |         18        1.36       79.55
+         62 |         18        1.36       80.91
+         63 |         18        1.36       82.27
+         64 |         18        1.36       83.64
+         65 |         18        1.36       85.00
+         66 |         18        1.36       86.36
+         68 |         18        1.36       87.73
+         69 |         18        1.36       89.09
+         70 |         18        1.36       90.45
+         71 |         18        1.36       91.82
+         72 |         18        1.36       93.18
+         73 |         18        1.36       94.55
+         74 |         18        1.36       95.91
+         75 |         18        1.36       97.27
+         76 |         18        1.36       98.64
+         77 |         18        1.36      100.00
+------------+-----------------------------------
+      Total |      1,320      100.00
+
+. forval i =1/70{
+  2.         replace int_dummy`i' = 0 if sd_code_year == .
+  3. }
+(132 real changes made)
+(132 real changes made)
+(132 real changes made)
+(132 real changes made)
+(132 real changes made)
+(132 real changes made)
+(132 real changes made)
+(132 real changes made)
+(132 real changes made)
+(132 real changes made)
+(132 real changes made)
+(132 real changes made)
+(132 real changes made)
+(132 real changes made)
+(132 real changes made)
+(132 real changes made)
+(132 real changes made)
+(132 real changes made)
+(132 real changes made)
+(132 real changes made)
+(132 real changes made)
+(132 real changes made)
+(132 real changes made)
+(132 real changes made)
+(132 real changes made)
+(132 real changes made)
+(132 real changes made)
+(132 real changes made)
+(132 real changes made)
+(132 real changes made)
+(132 real changes made)
+(132 real changes made)
+(132 real changes made)
+(132 real changes made)
+(132 real changes made)
+(132 real changes made)
+(132 real changes made)
+(132 real changes made)
+(132 real changes made)
+(132 real changes made)
+(132 real changes made)
+(132 real changes made)
+(132 real changes made)
+(132 real changes made)
+(132 real changes made)
+(132 real changes made)
+(132 real changes made)
+(132 real changes made)
+(132 real changes made)
+(132 real changes made)
+(132 real changes made)
+(132 real changes made)
+(132 real changes made)
+(132 real changes made)
+(132 real changes made)
+(132 real changes made)
+(132 real changes made)
+(132 real changes made)
+(132 real changes made)
+(132 real changes made)
+(132 real changes made)
+(132 real changes made)
+(132 real changes made)
+(132 real changes made)
+(132 real changes made)
+(132 real changes made)
+(132 real changes made)
+(132 real changes made)
+(132 real changes made)
+(132 real changes made)
+
+. 
+. 
+. sort s gb year 
+
+. 
+. keep amenity total_amenity *budget_h* z* dummy_* gb s year int_*
+
+. 
+. 
+. save constructed/panel_amenities_structural_estimation, replace
+file constructed/panel_amenities_structural_estimation.dta saved
+
+. export delimited constructed/panel_amenities_structural_estimation, replace  
+>     
+file constructed/panel_amenities_structural_estimation.csv saved
+
+. export excel using "constructed/panel_amenities_structural_estimation.xlsx", 
+> replace firstrow(variables)
+file constructed/panel_amenities_structural_estimation.xlsx saved
+
+. export delimited final/inputs/panel_amenities_structural_estimation, replace 
+>     
+file final/inputs/panel_amenities_structural_estimation.csv saved
+
+. 
+. gen log_total_amenity = log(total_amenity)
+
+. reg log_total_amenity dummy*
+note: dummy_j1 omitted because of collinearity.
+note: dummy_year11 omitted because of collinearity.
+
+      Source |       SS           df       MS      Number of obs   =     1,452
+-------------+----------------------------------   F(31, 1420)     =   2355.60
+       Model |  457.552182        31  14.7597478   Prob > F        =    0.0000
+    Residual |  8.89746657     1,420  .006265822   R-squared       =    0.9809
+-------------+----------------------------------   Adj R-squared   =    0.9805
+       Total |  466.449648     1,451  .321467711   Root MSE        =    .07916
+
+------------------------------------------------------------------------------
+log_total_~y | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+    dummy_j1 |          0  (omitted)
+    dummy_j2 |  -.4368303   .0137795   -31.70   0.000    -.4638606      -.4098
+    dummy_j3 |  -1.126678   .0137795   -81.77   0.000    -1.153708   -1.099647
+    dummy_j4 |  -1.589456   .0137795  -115.35   0.000    -1.616486   -1.562425
+    dummy_j5 |  -.2586912   .0137795   -18.77   0.000    -.2857215   -.2316609
+    dummy_j6 |  -1.479589   .0137795  -107.38   0.000    -1.506619   -1.452559
+    dummy_j7 |  -1.518827   .0137795  -110.22   0.000    -1.545858   -1.491797
+    dummy_j8 |  -1.978729   .0137795  -143.60   0.000    -2.005759   -1.951699
+    dummy_j9 |  -1.348128   .0137795   -97.84   0.000    -1.375159   -1.321098
+   dummy_j10 |  -.5244149   .0137795   -38.06   0.000    -.5514452   -.4973847
+   dummy_j11 |  -1.227832   .0137795   -89.11   0.000    -1.254863   -1.200802
+   dummy_j12 |  -.3660848   .0137795   -26.57   0.000    -.3931151   -.3390546
+   dummy_j13 |  -1.097172   .0137795   -79.62   0.000    -1.124202   -1.070141
+   dummy_j14 |  -1.337485   .0137795   -97.06   0.000    -1.364515   -1.310454
+   dummy_j15 |   -1.43061   .0137795  -103.82   0.000     -1.45764    -1.40358
+   dummy_j16 |  -1.771799   .0137795  -128.58   0.000    -1.798829   -1.744768
+   dummy_j17 |  -1.895212   .0137795  -137.54   0.000    -1.922243   -1.868182
+   dummy_j18 |  -1.479082   .0137795  -107.34   0.000    -1.506112   -1.452052
+   dummy_j19 |  -1.769815   .0137795  -128.44   0.000    -1.796845   -1.742785
+   dummy_j20 |  -1.442571   .0137795  -104.69   0.000    -1.469601    -1.41554
+   dummy_j21 |  -1.790083   .0137795  -129.91   0.000    -1.817114   -1.763053
+   dummy_j22 |  -1.626713   .0137795  -118.05   0.000    -1.653743   -1.599683
+ dummy_year1 |   .0542705   .0097435     5.57   0.000     .0351573    .0733838
+ dummy_year2 |     .02394   .0097435     2.46   0.014     .0048267    .0430533
+ dummy_year3 |  -.0114346   .0097435    -1.17   0.241    -.0305479    .0076787
+ dummy_year4 |    -.03939   .0097435    -4.04   0.000    -.0585033   -.0202767
+ dummy_year5 |    -.07212   .0097435    -7.40   0.000    -.0912333   -.0530067
+ dummy_year6 |   -.097158   .0097435    -9.97   0.000    -.1162713   -.0780447
+ dummy_year7 |  -.1187742   .0097435   -12.19   0.000    -.1378874   -.0996609
+ dummy_year8 |  -.1206903   .0097435   -12.39   0.000    -.1398036    -.101577
+ dummy_year9 |  -.1223719   .0097435   -12.56   0.000    -.1414852   -.1032586
+dummy_year10 |  -.0496845   .0097435    -5.10   0.000    -.0687978   -.0305712
+dummy_year11 |          0  (omitted)
+       _cons |   8.393078   .0117512   714.23   0.000     8.370027     8.41613
+------------------------------------------------------------------------------
+
+. 
+. 
+. 
+. 
+. 
+. 
+end of do-file
+
+. 
+. log close
+      name:  <unnamed>
+       log:  /Users/junbiao/PhD/Almagro2025_replication/code/0_dataprep/3_maste
+> r_dataprep_final.log
+  log type:  text
+ closed on:   8 Sep 2025, 21:01:31
+-------------------------------------------------------------------------------
